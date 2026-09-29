@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mazmorra de Cartas</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&family=Cinzel:wght@400;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════ PANTALLA LOGIN ═══ -->
+  <div id="screen-login" class="screen active">
+    <div class="login-bg">
+      <div class="title-box">
+        <h1 class="game-title">⚔️ MAZMORRA<br><span>DE CARTAS</span></h1>
+        <p class="game-subtitle">Dados • Cartas • Aventura</p>
+      </div>
+      <div class="login-card">
+        <h2>Entrar al Calabozo</h2>
+        <input id="login-name" type="text" placeholder="Tu nombre de aventurero..." maxlength="20" />
+        <button class="btn-primary" onclick="startGame()">⚔️ Comenzar Aventura</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ SELECCIÓN CLASE ═══ -->
+  <div id="screen-class" class="screen">
+    <div class="screen-header">
+      <h2>⚔️ Elige tu Clase</h2>
+      <p>Cada clase tiene habilidades únicas con el dado</p>
+    </div>
+    <div id="class-grid" class="class-grid"></div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ JUEGO PRINCIPAL ═══ -->
+  <div id="screen-game" class="screen">
+
+    <!-- HUD superior -->
+    <div class="hud-top">
+      <div class="hud-player">
+        <span id="hud-avatar">🧝</span>
+        <div>
+          <div id="hud-name">Aventurero</div>
+          <div id="hud-class-name">Clase</div>
+        </div>
+      </div>
+      <div class="hud-stats">
+        <div class="stat-box hp">
+          <span>❤️ HP</span>
+          <div class="stat-bar"><div id="bar-hp" class="bar-fill hp-fill"></div></div>
+          <span id="txt-hp">100/100</span>
+        </div>
+        <div class="stat-box">
+          <span>🏆 Sala</span>
+          <span id="txt-room" class="stat-value">1</span>
+        </div>
+        <div class="stat-box">
+          <span>⭐ Nivel</span>
+          <span id="txt-level" class="stat-value">1</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Área mazmorra -->
+    <div class="dungeon-area">
+
+      <!-- Panel enemigo -->
+      <div class="enemy-panel">
+        <div id="enemy-sprite" class="enemy-sprite">👹</div>
+        <div id="enemy-name" class="enemy-name">Goblin</div>
+        <div class="stat-bar enemy-bar">
+          <div id="bar-enemy" class="bar-fill enemy-fill"></div>
+        </div>
+        <span id="txt-enemy-hp" class="enemy-hp">30/30</span>
+        <div id="enemy-intent" class="enemy-intent">💢 Atacará: 8 daño</div>
+      </div>
+
+      <!-- Panel central: dado -->
+      <div class="dice-panel">
+        <div id="dice-result" class="dice-face">🎲</div>
+        <div id="dice-value" class="dice-value">?</div>
+        <button id="btn-roll" class="btn-dice" onclick="rollDice()">🎲 Lanzar Dado</button>
+        <div id="roll-msg" class="roll-msg"></div>
+        <div id="turn-phase" class="turn-phase">Lanza el dado para comenzar</div>
+      </div>
+
+      <!-- Log de batalla -->
+      <div class="battle-log">
+        <h4>📜 Registro</h4>
+        <div id="log-content"></div>
+      </div>
+
+    </div>
+
+    <!-- Mano de cartas -->
+    <div class="hand-area">
+      <h3>🃏 Tu Mano <span id="hand-count" class="badge">0</span></h3>
+      <div id="hand-cards" class="hand-cards"></div>
+    </div>
+
+    <!-- Botón siguiente sala -->
+    <div id="next-room-btn" class="next-room hidden">
+      <button class="btn-primary" onclick="nextRoom()">➡️ Avanzar a la siguiente sala</button>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════════ GAME OVER ═══ -->
+  <div id="screen-gameover" class="screen">
+    <div class="gameover-box">
+      <div class="gameover-icon">💀</div>
+      <h2>Has Caído</h2>
+      <p id="gameover-msg">El calabozo te ha vencido...</p>
+      <div id="final-stats"></div>
+      <button class="btn-primary" onclick="restartGame()">🔄 Intentar de nuevo</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ VICTORIA ═══ -->
+  <div id="screen-victory" class="screen">
+    <div class="victory-box">
+      <div class="victory-icon">👑</div>
+      <h2>¡Victoria!</h2>
+      <p id="victory-msg">Has conquistado la mazmorra</p>
+      <div id="victory-stats"></div>
+      <button class="btn-primary" onclick="restartGame()">🏆 Jugar de nuevo</button>
+    </div>
+  </div>
+
+  <!-- ═══ Firebase SDK (OPCIONAL) ═══
+       Descomenta estas 3 líneas cuando configures Firebase en js/firebase.js -->
+  <!--
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+  -->
+
+  <!-- Scripts del juego -->
+  <script src="js/config.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/game.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/network.js"></script>
+  <script src="js/firebase.js"></script>
+</body>
+</html>
