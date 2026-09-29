@@ -281,6 +281,12 @@ function onEnemyDefeated() {
   state.level += 1;
   state.turnOver = true;
 
+  // ¿Era el JEFE FINAL? → victoria inmediata (no "volver a explorar")
+  if (state.enemy.isBoss) {
+    onVictory();
+    return;
+  }
+
   // Pequeña curación tras la pelea
   const healAmt = Math.round(state.maxHp * 0.15);
   state.hp = Math.min(state.maxHp, state.hp + healAmt);
