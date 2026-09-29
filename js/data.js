@@ -147,3 +147,67 @@ function reqLabel(req) {
     default:     return '🎲 ?';
   }
 }
+
+
+/* =====================================================================
+   OBJETOS — se encuentran en cofres durante la exploración.
+   ---------------------------------------------------------------------
+   Tipos:
+     - consumable: se usa al instante al recogerlo (ej. poción cura HP)
+     - armor:      equipable, reduce el daño recibido en combate
+     - weapon:     equipable, aumenta el daño de tus cartas de ataque
+     - relic:      equipable, bonus pasivo (ej. +1 al dado, +HP máx)
+   Los equipables ocupan una "ranura" (slot): armor / weapon / relic.
+   Solo puede haber 1 objeto equipado por ranura (el nuevo reemplaza).
+   ===================================================================== */
+
+const ITEMS = {
+
+  /* ── Consumibles ─────────────────────────────────────────────────── */
+  pocion_menor:  { id:'pocion_menor',  name:'Poción Menor',  icon:'🧪', type:'consumable',
+                   desc:'Cura 20 HP al instante.', heal:20 },
+  pocion_mayor:  { id:'pocion_mayor',  name:'Poción Mayor',  icon:'⚗️', type:'consumable',
+                   desc:'Cura 45 HP al instante.', heal:45 },
+  elixir_vida:   { id:'elixir_vida',   name:'Elixir de Vida',icon:'🍶', type:'consumable',
+                   desc:'Restaura toda tu vida.', healFull:true },
+
+  /* ── Armaduras (ranura: armor) → reducen daño recibido ───────────── */
+  armadura_cuero: { id:'armadura_cuero', name:'Armadura de Cuero', icon:'🥋', type:'armor', slot:'armor',
+                    desc:'Reduce 2 de daño por golpe.', defense:2 },
+  cota_malla:     { id:'cota_malla',     name:'Cota de Malla',     icon:'🛡️', type:'armor', slot:'armor',
+                    desc:'Reduce 4 de daño por golpe.', defense:4 },
+  armadura_placas:{ id:'armadura_placas',name:'Armadura de Placas',icon:'🦺', type:'armor', slot:'armor',
+                    desc:'Reduce 6 de daño por golpe.', defense:6 },
+
+  /* ── Armas (ranura: weapon) → +daño a cartas de ataque ───────────── */
+  daga_afilada:   { id:'daga_afilada',   name:'Daga Afilada',   icon:'🗡️', type:'weapon', slot:'weapon',
+                    desc:'+2 de daño a tus ataques.', attack:2 },
+  espada_acero:   { id:'espada_acero',   name:'Espada de Acero', icon:'⚔️', type:'weapon', slot:'weapon',
+                    desc:'+4 de daño a tus ataques.', attack:4 },
+  hacha_guerra:   { id:'hacha_guerra',   name:'Hacha de Guerra', icon:'🪓', type:'weapon', slot:'weapon',
+                    desc:'+6 de daño a tus ataques.', attack:6 },
+
+  /* ── Reliquias (ranura: relic) → bonus pasivos ───────────────────── */
+  dado_suerte:    { id:'dado_suerte',    name:'Dado de la Suerte', icon:'🎲', type:'relic', slot:'relic',
+                    desc:'+1 al resultado del dado.', diceBonus:1 },
+  amuleto_vida:   { id:'amuleto_vida',   name:'Amuleto Vital',    icon:'📿', type:'relic', slot:'relic',
+                    desc:'+25 HP máximo.', maxHpBonus:25 },
+  anillo_furia:   { id:'anillo_furia',   name:'Anillo de Furia',  icon:'💍', type:'relic', slot:'relic',
+                    desc:'+2 daño y +1 al dado.', attack:2, diceBonus:1 },
+};
+
+/* Botín posible por sala (índice = sala-1). Cada cofre saca uno al azar
+   de la lista correspondiente, así las salas avanzadas dan mejor loot. */
+const LOOT_TABLE = [
+  ['pocion_menor', 'armadura_cuero', 'daga_afilada'],                         // Sala 1
+  ['pocion_menor', 'pocion_mayor', 'daga_afilada', 'dado_suerte'],            // Sala 2
+  ['pocion_mayor', 'cota_malla', 'espada_acero', 'amuleto_vida'],             // Sala 3
+  ['pocion_mayor', 'cota_malla', 'espada_acero', 'anillo_furia'],             // Sala 4
+  ['elixir_vida', 'armadura_placas', 'hacha_guerra', 'anillo_furia'],         // Sala 5
+];
+
+/* Devuelve el id de un objeto al azar según la sala. */
+function randomLoot(roomNum) {
+  const table = LOOT_TABLE[Math.min(roomNum, LOOT_TABLE.length) - 1] || LOOT_TABLE[0];
+  return table[Math.floor(Math.random() * table.length)];
+}

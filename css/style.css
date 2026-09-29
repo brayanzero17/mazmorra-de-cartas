@@ -632,3 +632,67 @@ input[type="text"]::placeholder { color: var(--text-dim); }
   .dice-face { width: 76px; height: 76px; font-size: 2.6rem; }
   .enemy-sprite { width: 100px; height: 100px; font-size: 3rem; }
 }
+
+/* ──────────────────────────── Modo Exploración ─────────────────────── */
+.explore-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .8rem;
+  padding: 1rem;
+  position: relative;
+}
+
+#explore-canvas {
+  border: 3px solid var(--steel-light);
+  box-shadow: inset 0 0 0 3px #000, 0 0 24px #000;
+  image-rendering: pixelated;
+  max-width: 100%;
+  height: auto;
+  background: #0d0a08;
+}
+
+.explore-hint {
+  color: var(--text-dim);
+  font-size: 1.05rem;
+  text-align: center;
+  max-width: 640px;
+  line-height: 1.4;
+}
+.explore-hint b { color: var(--amber); }
+
+/* Fila de objetos equipados en el HUD */
+.equip-row { display: flex; gap: .3rem; align-items: center; }
+.equip-slot {
+  background: #000;
+  border: 2px solid var(--steel);
+  font-size: 1.2rem;
+  padding: .15rem .3rem;
+  cursor: help;
+}
+
+/* Joystick táctil (solo visible en pantallas pequeñas) */
+.joystick {
+  display: none;
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  width: 110px; height: 110px;
+  border-radius: 50%;
+  background: rgba(0,0,0,.4);
+  border: 3px solid var(--steel);
+  touch-action: none;
+  z-index: 30;
+}
+.joystick-stick {
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 48px; height: 48px;
+  margin: -24px 0 0 -24px;
+  border-radius: 50%;
+  background: var(--rust-light);
+  border: 3px solid #000;
+}
+@media (max-width: 760px), (pointer: coarse) {
+  .joystick { display: block; }
+}

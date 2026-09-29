@@ -36,6 +36,38 @@
     <div id="class-grid" class="class-grid"></div>
   </div>
 
+  <!-- ═══════════════════════════════════════════ EXPLORACIÓN ═══ -->
+  <div id="screen-explore" class="screen">
+    <div class="hud-top">
+      <div class="hud-player">
+        <span id="exp-avatar">🧝</span>
+        <div>
+          <div id="exp-name">Aventurero</div>
+          <div id="exp-class-name">Clase</div>
+        </div>
+      </div>
+      <div class="hud-stats">
+        <div class="stat-box hp">
+          <span>❤️ HP</span>
+          <div class="stat-bar"><div id="exp-bar-hp" class="bar-fill hp-fill"></div></div>
+          <span id="exp-txt-hp">100/100</span>
+        </div>
+        <div class="stat-box">
+          <span>🗺️ Sala</span>
+          <span id="exp-room" class="stat-value">1</span>
+        </div>
+        <div id="exp-equip" class="equip-row"></div>
+      </div>
+    </div>
+
+    <div class="explore-wrap">
+      <canvas id="explore-canvas"></canvas>
+      <p class="explore-hint">🎮 Muévete con <b>WASD</b> o <b>flechas</b>. Toca enemigos para pelear, abre 📦 cofres y llega a la 🚪 salida.</p>
+      <!-- Joystick táctil (móvil) -->
+      <div id="joystick" class="joystick"><div id="joystick-stick" class="joystick-stick"></div></div>
+    </div>
+  </div>
+
   <!-- ═══════════════════════════════════════════ JUEGO PRINCIPAL ═══ -->
   <div id="screen-game" class="screen">
 
@@ -106,9 +138,9 @@
       <div id="hand-cards" class="hand-cards"></div>
     </div>
 
-    <!-- Botón siguiente sala -->
+    <!-- Botón volver a explorar -->
     <div id="next-room-btn" class="next-room hidden">
-      <button class="btn-primary" onclick="nextRoom()">➡️ Avanzar a la siguiente sala</button>
+      <button class="btn-primary" onclick="nextRoom()">🗺️ Volver a explorar la mazmorra</button>
     </div>
 
   </div>
@@ -149,6 +181,7 @@
   <script src="js/sprites.js"></script>
   <script src="js/data.js"></script>
   <script src="js/game.js"></script>
+  <script src="js/explore.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/network.js"></script>
   <script src="js/firebase.js"></script>

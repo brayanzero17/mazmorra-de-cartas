@@ -234,6 +234,59 @@ function showNextRoomButton() { document.getElementById('next-room-btn').classLi
 function hideNextRoomButton() { document.getElementById('next-room-btn').classList.add('hidden'); }
 function nextRoom() { goNextRoom(); }
 
+/* ──────────────────────────── Exploración ──────────────────────────── */
+let _exploreInit = false;
+
+function enterExploreScreen(roomNum) {
+  const canvas = document.getElementById('explore-canvas');
+
+  // Inicializar el motor una sola vez
+  if (!_exploreInit) {
+    EXPLORE.init(canvas);
+    EXPLORE.onEncounter = (enemyRef) => startCombatFromEncounter(enemyRef);
+    EXPLORE.onExit      = () => onRoomCleared();
+    EXPLORE.onPickup    = (itemId) => { acquireItem(itemId); renderExploreHUD(); };
+    // Joystick táctil
+    const pad = document.getElementById('joystick');
+    const stick = document.getElementById('joystick-stick');
+    if (pad && stick) EXPLORE.bindTouch(pad, stick);
+    _exploreInit = true;
+  }
+
+  EXPLORE.buildRoom(roomNum, ENEMIES);
+  renderExploreHUD();
+  showScreen('screen-explore');
+  EXPLORE.start();
+}
+
+function renderExploreHUD() {
+  const hpPct = Math.max(0, (state.hp / state.maxHp) * 100);
+
+  const avatar = document.getElementById('exp-avatar');
+  if (typeof makePlayerFace === 'function') {
+    avatar.innerHTML = '';
+    avatar.appendChild(makePlayerFace(hpPct, state.classId));
+  }
+  document.getElementById('exp-name').textContent       = state.playerName;
+  document.getElementById('exp-class-name').textContent = state.classData.name;
+  document.getElementById('exp-bar-hp').style.width     = hpPct + '%';
+  document.getElementById('exp-txt-hp').textContent     = `${state.hp}/${state.maxHp}`;
+  document.getElementById('exp-room').textContent       = `${state.room}/${TOTAL_ROOMS}`;
+  renderEquip();
+}
+
+/* Muestra los objetos equipados (armor/weapon/relic). */
+function renderEquip() {
+  const cont = document.getElementById('exp-equip');
+  if (!cont) return;
+  const slots = ['weapon','armor','relic'];
+  const labels = { weapon:'⚔️', armor:'🛡️', relic:'💠' };
+  cont.innerHTML = slots.map(s => {
+    const it = state.equip[s];
+    return `<span class="equip-slot" title="${it ? it.name+': '+it.desc : 'Vacío'}">${it ? it.icon : labels[s]}</span>`;
+  }).join('');
+}
+
 /* ──────────────────────────── Sonido ───────────────────────────────── */
 function toggleSound() {
   if (typeof SFX === 'undefined') return;

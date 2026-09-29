@@ -27,7 +27,51 @@ const state = {
   canPlay:     false,
   turnOver:    false,
   cardsPlayed: 0,    // cartas jugadas este turno (límite 1 por tirada)
+
+  // Inventario / equipo (objetos de los cofres)
+  equip:  { armor:null, weapon:null, relic:null }, // objeto equipado por ranura
+  bag:    [],        // consumibles recogidos (ids)
+  currentEnemyRef: null, // referencia al enemigo de exploración en combate
 };
+
+/* ──────────────────────────── Bonos de equipo ──────────────────────── */
+/* Suman los efectos de los objetos equipados. */
+function equipBonus(kind) {
+  let total = 0;
+  Object.values(state.equip).forEach(it => { if (it && it[kind]) total += it[kind]; });
+  return total;
+}
+function bonusAttack()   { return equipBonus('attack'); }
+function bonusDefense()  { return equipBonus('defense'); }
+function bonusDice()     { return equipBonus('diceBonus'); }
+function bonusMaxHp()    { return equipBonus('maxHpBonus'); }
+
+/* Equipa un objeto (reemplaza el de su ranura) o usa un consumible. */
+function acquireItem(itemId) {
+  const it = ITEMS[itemId];
+  if (!it) return;
+
+  if (it.type === 'consumable') {
+    // Se usan al instante (curan)
+    if (it.healFull) { state.hp = state.maxHp; }
+    else if (it.heal) { state.hp = Math.min(state.maxHp, state.hp + it.heal); }
+    logMsg(`${it.icon} Usaste ${it.name}.`, 'heal');
+  } else {
+    // Equipable: reemplaza la ranura
+    const prevMaxBonus = bonusMaxHp();
+    state.equip[it.slot] = it;
+    // Reajustar HP máximo si cambió el bonus de vida
+    const newMaxBonus = bonusMaxHp();
+    if (newMaxBonus !== prevMaxBonus) {
+      const diff = newMaxBonus - prevMaxBonus;
+      state.maxHp = state.classData.maxHp + newMaxBonus;
+      if (diff > 0) state.hp += diff; // ganar vida máx te da esa vida
+      state.hp = Math.min(state.hp, state.maxHp);
+    }
+    logMsg(`${it.icon} Equipaste ${it.name}.`, 'special');
+  }
+  if (typeof renderEquip === 'function') renderEquip();
+}
 
 /* ──────────────────────────── Inicio de partida ────────────────────── */
 function initGame(classId) {
@@ -41,13 +85,38 @@ function initGame(classId) {
   state.dodge     = false;
   state.room      = 1;
   state.level     = 1;
+  state.equip     = { armor:null, weapon:null, relic:null };
+  state.bag       = [];
+  state.currentEnemyRef = null;
 
-  spawnEnemy(1);
-  resetTurn();
   clearLog();
   logMsg(`⚔️ ${state.playerName} el ${cls.name} entra en la mazmorra...`, 'info');
-  logMsg(`Sala 1: ¡Aparece un ${state.enemy.name}!`, 'info');
 
+  // Arranca en modo EXPLORACIÓN (no directo al combate)
+  startExploration(1);
+}
+
+/* ──────────────────────────── Exploración ──────────────────────────── */
+function startExploration(roomNum) {
+  state.room = roomNum;
+  if (typeof enterExploreScreen === 'function') {
+    enterExploreScreen(roomNum);
+  } else {
+    // Fallback: si no hay modo exploración, combate directo
+    spawnEnemy(roomNum);
+    resetTurn();
+    showScreen('screen-game');
+    renderAll();
+  }
+}
+
+/* Llamado cuando el jugador choca con un enemigo en la exploración. */
+function startCombatFromEncounter(enemyRef) {
+  state.currentEnemyRef = enemyRef || null;
+  // El enemigo del combate corresponde a la sala actual
+  spawnEnemy(state.room);
+  resetTurn();
+  logMsg(`⚔️ ¡Combate contra ${state.enemy.name}!`, 'info');
   showScreen('screen-game');
   renderAll();
 }
@@ -89,11 +158,13 @@ function resetTurn() {
 function doRollDice() {
   if (state.hasRolled) return null;
   sfx('dice');
-  const value = randInt(1, 6);
+  let value = randInt(1, 6);
+  const db = bonusDice();
+  if (db) { value = Math.min(6, value + db); }   // reliquia: +dado (tope 6)
   state.dice      = value;
   state.hasRolled = true;
   state.canPlay   = true;
-  logMsg(`🎲 Lanzaste el dado: <b>${value}</b>`, 'info');
+  logMsg(`🎲 Lanzaste el dado: <b>${value}</b>${db ? ` (incluye +${db} de reliquia)` : ''}`, 'info');
   return value;
 }
 
@@ -132,7 +203,7 @@ function applyCardEffect(card, r) {
   const e = state.enemy;
 
   if (r.dmg != null) {
-    let dmg = r.dmg + state.buff;
+    let dmg = r.dmg + state.buff + bonusAttack();  // + bonus del arma equipada
     if (state.buff) { logMsg(`Bonus de furia: +${state.buff} daño`, 'special'); state.buff = 0; }
     e.hp = Math.max(0, e.hp - dmg);
     logMsg(`${card.icon} ${card.name}: ${dmg} de daño a ${e.name}.`, 'damage');
@@ -177,7 +248,8 @@ function enemyTurn() {
       logMsg(`💨 ¡Esquivaste el ataque de ${e.name}!`, 'special');
       state.dodge = false;
     } else {
-      const blocked = Math.min(state.block, dmg);
+      const armor = bonusDefense();               // reducción fija de la armadura
+      const blocked = Math.min(state.block + armor, dmg);
       dmg -= blocked;
       if (blocked > 0) logMsg(`🛡️ Tu defensa absorbe ${blocked} de daño.`, 'special');
       state.hp = Math.max(0, state.hp - dmg);
@@ -198,27 +270,47 @@ function onEnemyDefeated() {
   logMsg(`🏆 ¡Derrotaste al ${state.enemy.name}!`, 'special');
   sfx('enemyDown');
   state.level += 1;
+  state.turnOver = true;
 
-  if (state.room >= TOTAL_ROOMS) {
-    onVictory();
+  // Pequeña curación tras la pelea
+  const healAmt = Math.round(state.maxHp * 0.15);
+  state.hp = Math.min(state.maxHp, state.hp + healAmt);
+  logMsg(`💚 Recuperas ${healAmt} HP tras la batalla.`, 'heal');
+  renderAll();
+
+  // Volver a la exploración y marcar ese enemigo como derrotado
+  showNextRoomButton();  // el botón ahora dice "volver a explorar"
+}
+
+/* Vuelve al mapa de exploración tras ganar un combate. */
+function goNextRoom() {
+  hideNextRoomButton();
+  if (typeof EXPLORE !== 'undefined' && state.currentEnemyRef) {
+    EXPLORE.defeatEnemy(state.currentEnemyRef);
+    state.currentEnemyRef = null;
+  }
+  if (typeof enterExploreScreen === 'function') {
+    // Volvemos al mapa de la MISMA sala (el enemigo ya no está)
+    showScreen('screen-explore');
+    EXPLORE.start();
   } else {
-    state.turnOver = true;
-    // Curación entre salas
-    const healAmt = Math.round(state.maxHp * 0.25);
-    state.hp = Math.min(state.maxHp, state.hp + healAmt);
-    logMsg(`💚 Descansas y recuperas ${healAmt} HP.`, 'heal');
+    // Fallback sin exploración: avanzar de sala como antes
+    if (state.room >= TOTAL_ROOMS) { onVictory(); return; }
+    state.room += 1;
+    spawnEnemy(state.room);
+    resetTurn();
     renderAll();
-    showNextRoomButton();
   }
 }
 
-function goNextRoom() {
-  state.room += 1;
-  spawnEnemy(state.room);
-  resetTurn();
-  logMsg(`🚪 Sala ${state.room}: ¡Aparece un ${state.enemy.name}!`, 'info');
-  hideNextRoomButton();
-  renderAll();
+/* Llamado por el modo exploración cuando el jugador cruza la salida. */
+function onRoomCleared() {
+  if (state.room >= TOTAL_ROOMS) {
+    onVictory();
+  } else {
+    logMsg(`🚪 Avanzas a la sala ${state.room + 1}...`, 'info');
+    startExploration(state.room + 1);
+  }
 }
 
 /* ──────────────────────────── Fin de partida ───────────────────────── */
