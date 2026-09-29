@@ -13,6 +13,21 @@ pasillo de mazmorra con antorchas, sonidos 8-bit y efectos de sangre.
 
 ## 🎮 Cómo jugar
 
+El juego tiene **dos modos** que se alternan (estilo Undertale / RPG clásico):
+
+- 🗺️ **Exploración** (vista desde arriba): te mueves libre por la mazmorra con **WASD / flechas**
+  (o el **joystick táctil** en móvil). Abres 📦 **cofres** con objetos, esquivas o enfrentas
+  enemigos, y buscas la 🚪 **salida** (se abre al derrotar a los enemigos de la sala).
+- ⚔️ **Combate de cartas**: al **tocar un enemigo** entra la pelea por turnos con dado + cartas.
+  Al ganar, vuelves al mapa.
+
+### 🎒 Objetos (en los cofres)
+- 🧪 **Consumibles**: curan HP al instante.
+- 🛡️ **Armaduras**: reducen el daño que recibes.
+- ⚔️ **Armas**: aumentan el daño de tus cartas.
+- 💠 **Reliquias**: bonus pasivos (+dado, +HP máximo...).
+
+### Pasos
 1. Escribe tu nombre de aventurero.
 2. Elige una de las **4 clases** (cada una juega distinto según el dado):
    | Clase | Estilo | El dado... |
@@ -52,8 +67,9 @@ mazmorra-game/
 │   ├── config.js         # Configuración (URL del servidor)
 │   ├── audio.js          # Sonidos retro 8-bit (Web Audio API)
 │   ├── sprites.js        # Sprites pixel art (enemigos + cara del jugador)
-│   ├── data.js           # ⭐ Clases, cartas y enemigos (edita aquí para balancear)
-│   ├── game.js           # Motor del juego (dado, combate, salas)
+│   ├── data.js           # ⭐ Clases, cartas, enemigos y objetos (edita aquí para balancear)
+│   ├── game.js           # Motor del juego (dado, combate, salas, inventario)
+│   ├── explore.js        # Modo exploración top-down (movimiento libre)
 │   ├── ui.js             # Interfaz / render
 │   ├── network.js        # Conexión opcional con el servidor Flask
 │   └── firebase.js       # Integración opcional con Firebase
