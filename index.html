@@ -62,6 +62,7 @@
           <span>⭐ Nivel</span>
           <span id="txt-level" class="stat-value">1</span>
         </div>
+        <button id="btn-sound" class="btn-sound" onclick="toggleSound()" title="Activar/silenciar sonido">🔊</button>
       </div>
     </div>
 
@@ -70,6 +71,9 @@
 
       <!-- Panel enemigo -->
       <div class="enemy-panel">
+        <div class="dungeon-corridor"></div>
+        <div class="torch left"></div>
+        <div class="torch right"></div>
         <div id="enemy-sprite" class="enemy-sprite">👹</div>
         <div id="enemy-name" class="enemy-name">Goblin</div>
         <div class="stat-bar enemy-bar">
@@ -141,6 +145,7 @@
 
   <!-- Scripts del juego -->
   <script src="js/config.js"></script>
+  <script src="js/audio.js"></script>
   <script src="js/sprites.js"></script>
   <script src="js/data.js"></script>
   <script src="js/game.js"></script>

@@ -54,7 +54,7 @@ function renderHUD() {
   // Cara DOOM del jugador: canvas pixel art que cambia con la vida.
   const avatar = document.getElementById('hud-avatar');
   if (typeof makePlayerFace === 'function') {
-    const face = makePlayerFace(hpPct);
+    const face = makePlayerFace(hpPct, state.classId);
     avatar.innerHTML = '';
     avatar.appendChild(face);
   } else {
@@ -202,6 +202,15 @@ function fxPlayerHit() {
   flash.classList.add('show');
 }
 
+function fxEnemyAttack() {
+  const sprite = document.getElementById('enemy-sprite');
+  if (!sprite) return;
+  sprite.classList.remove('attack');
+  void sprite.offsetWidth;      // reinicia la animación
+  sprite.classList.add('attack');
+  setTimeout(() => sprite.classList.remove('attack'), 500);
+}
+
 function fxEnemyHit() {
   const sprite = document.getElementById('enemy-sprite');
   if (!sprite) return;
@@ -224,6 +233,16 @@ function fxEnemyHit() {
 function showNextRoomButton() { document.getElementById('next-room-btn').classList.remove('hidden'); }
 function hideNextRoomButton() { document.getElementById('next-room-btn').classList.add('hidden'); }
 function nextRoom() { goNextRoom(); }
+
+/* ──────────────────────────── Sonido ───────────────────────────────── */
+function toggleSound() {
+  if (typeof SFX === 'undefined') return;
+  const on = !SFX.isEnabled();
+  SFX.toggle(on);
+  const btn = document.getElementById('btn-sound');
+  if (btn) btn.textContent = on ? '🔊' : '🔇';
+  if (on) SFX.click();
+}
 
 /* ──────────────────────────── Battle log ───────────────────────────── */
 function logMsg(text, cls = '') {

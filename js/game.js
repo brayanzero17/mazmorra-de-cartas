@@ -88,6 +88,7 @@ function resetTurn() {
 
 function doRollDice() {
   if (state.hasRolled) return null;
+  sfx('dice');
   const value = randInt(1, 6);
   state.dice      = value;
   state.hasRolled = true;
@@ -135,20 +136,23 @@ function applyCardEffect(card, r) {
     if (state.buff) { logMsg(`Bonus de furia: +${state.buff} daño`, 'special'); state.buff = 0; }
     e.hp = Math.max(0, e.hp - dmg);
     logMsg(`${card.icon} ${card.name}: ${dmg} de daño a ${e.name}.`, 'damage');
+    sfx('playerAttack'); sfx('hitEnemy');
   }
   if (r.heal != null) {
     const before = state.hp;
     state.hp = Math.min(state.maxHp, state.hp + r.heal);
     logMsg(`${card.icon} ${card.name}: te curas ${state.hp - before} HP.`, 'heal');
+    sfx('heal');
   }
   if (r.block != null) {
     state.block += r.block;
     logMsg(`${card.icon} ${card.name}: +${r.block} de defensa.`, 'special');
+    sfx('block');
   }
-  if (r.buff != null) { state.buff += r.buff; logMsg(`¡Furia! próximo ataque +${r.buff}.`, 'special'); }
-  if (r.dodge)  { state.dodge = true;  logMsg('Te preparas para esquivar.', 'special'); }
-  if (r.freeze) { e.frozen = true;     logMsg(`❄️ ${e.name} queda congelado y perderá su turno.`, 'special'); }
-  if (r.poison) { e.poison = r.poison; e.poisonTurns = 2; logMsg(`🧪 ${e.name} envenenado (${r.poison}/turno).`, 'special'); }
+  if (r.buff != null) { state.buff += r.buff; logMsg(`¡Furia! próximo ataque +${r.buff}.`, 'special'); sfx('special'); }
+  if (r.dodge)  { state.dodge = true;  logMsg('Te preparas para esquivar.', 'special'); sfx('special'); }
+  if (r.freeze) { e.frozen = true;     logMsg(`❄️ ${e.name} queda congelado y perderá su turno.`, 'special'); sfx('special'); }
+  if (r.poison) { e.poison = r.poison; e.poisonTurns = 2; logMsg(`🧪 ${e.name} envenenado (${r.poison}/turno).`, 'special'); sfx('special'); }
 }
 
 /* ──────────────────────────── Turno enemigo ────────────────────────── */
@@ -178,6 +182,7 @@ function enemyTurn() {
       if (blocked > 0) logMsg(`🛡️ Tu defensa absorbe ${blocked} de daño.`, 'special');
       state.hp = Math.max(0, state.hp - dmg);
       logMsg(`💢 ${e.name} te ataca por ${dmg} de daño.`, 'enemy-atk');
+      if (dmg > 0) { sfx('playerHurt'); if (typeof fxEnemyAttack === 'function') fxEnemyAttack(); }
     }
   }
 
@@ -191,6 +196,7 @@ function enemyTurn() {
 /* ──────────────────────────── Enemigo derrotado ────────────────────── */
 function onEnemyDefeated() {
   logMsg(`🏆 ¡Derrotaste al ${state.enemy.name}!`, 'special');
+  sfx('enemyDown');
   state.level += 1;
 
   if (state.room >= TOTAL_ROOMS) {
@@ -218,6 +224,7 @@ function goNextRoom() {
 /* ──────────────────────────── Fin de partida ───────────────────────── */
 function onPlayerDefeated() {
   logMsg('💀 Has sido derrotado...', 'damage');
+  sfx('defeat');
   saveProgress('defeat');
   renderGameOver();
   showScreen('screen-gameover');
@@ -225,6 +232,7 @@ function onPlayerDefeated() {
 
 function onVictory() {
   logMsg('👑 ¡Has conquistado la mazmorra entera!', 'special');
+  sfx('victory');
   saveProgress('victory');
   renderVictory();
   showScreen('screen-victory');
@@ -233,4 +241,11 @@ function onVictory() {
 /* ──────────────────────────── Utilidades ───────────────────────────── */
 function randInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+/* Reproduce un efecto de sonido de forma segura (no rompe si audio.js
+   no está cargado o el navegador bloquea el audio). */
+function sfx(name) {
+  try { if (typeof SFX !== 'undefined' && SFX[name]) SFX[name](); }
+  catch (e) { /* silencio */ }
 }

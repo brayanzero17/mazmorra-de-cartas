@@ -5,6 +5,10 @@ Proyecto de semillero de videojuegos.
 
 El **dado (d6)** decide qué cartas puedes jugar cada turno — esa es la mecánica central.
 
+🎨 **Estilo visual DOOM**: gráficos pixel art retro, paleta infernal (sangre + verde tóxico),
+sprites de enemigos dibujados por código, cara del héroe que se ensangrienta al perder vida,
+pasillo de mazmorra con antorchas, sonidos 8-bit y efectos de sangre.
+
 ---
 
 ## 🎮 Cómo jugar
@@ -46,6 +50,8 @@ mazmorra-game/
 │   └── style.css         # Estética de mazmorra (dorado sobre negro)
 ├── js/
 │   ├── config.js         # Configuración (URL del servidor)
+│   ├── audio.js          # Sonidos retro 8-bit (Web Audio API)
+│   ├── sprites.js        # Sprites pixel art (enemigos + cara del jugador)
 │   ├── data.js           # ⭐ Clases, cartas y enemigos (edita aquí para balancear)
 │   ├── game.js           # Motor del juego (dado, combate, salas)
 │   ├── ui.js             # Interfaz / render

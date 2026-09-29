@@ -145,19 +145,20 @@ function makeEnemySprite(key) {
 /* ═══════════════════════════ CARA DOOM DEL JUGADOR ══════════════════ */
 /* Cambia de expresión según el % de vida (como el marine de DOOM).      */
 
-const FACE_PALETTE = {
-  s:'#c88a5a', S:'#e0a878', // piel
-  h:'#5a3a1a',              // pelo/sombra
-  e:'#ffffff', p:'#1a1a2a', // ojos
-  b:'#8b0000', m:'#5a1a1a', // sangre / boca
-  d:'#3a2410'               // contorno
+/* Paleta por clase: cambia el color del "casco/pelo" (h) y detalle (c). */
+const FACE_PALETTES = {
+  warrior: { s:'#c88a5a', S:'#e0a878', h:'#7a1a10', c:'#b83020', e:'#fff', p:'#1a1a2a', b:'#8b0000', m:'#5a1a1a', d:'#3a2410' }, // casco rojo
+  elf:     { s:'#d0a878', S:'#e8c8a0', h:'#2a6a2a', c:'#4a9a3a', e:'#fff', p:'#1a3a1a', b:'#8b0000', m:'#5a1a1a', d:'#204018' }, // capucha verde
+  mage:    { s:'#c0a080', S:'#e0c8a0', h:'#3a2a6a', c:'#6a4aaa', e:'#a8e8ff', p:'#1a1a3a', b:'#8b0000', m:'#5a1a1a', d:'#241a4a' }, // capucha morada
+  rogue:   { s:'#b89a70', S:'#d8b890', h:'#2a2a2a', c:'#4a4a4a', e:'#f0d020', p:'#1a1a1a', b:'#8b0000', m:'#5a1a1a', d:'#101010' }, // capucha negra
 };
 
-/* Distintas expresiones (12x12). De sano a casi muerto. */
+/* Expresiones base (12x12). 'h' = casco/pelo (color según clase),
+   'c' = detalle del casco. De sano a casi muerto. */
 const FACES = {
   ok: [                         // 75-100%: serio y firme
-    '..hhhhhhhh..',
-    '.hSSSSSSSSh.',
+    '..hhcchh....',
+    '.hccccccch..',
     '.hSSSSSSSSh.',
     '.hSeSpSpSeS.',
     '.hSSSSSSSSh.',
@@ -170,8 +171,8 @@ const FACES = {
     '............',
   ],
   hurt: [                       // 40-74%: apretando dientes, un corte
-    '..hhhhhhhh..',
-    '.hSSSSSSSSh.',
+    '..hhcchh....',
+    '.hccccccch..',
     '.hSSbSSSSSh.',
     '.hSpSSpSSeS.',
     '.hSSSSSSSSh.',
@@ -184,9 +185,9 @@ const FACES = {
     '............',
   ],
   bad: [                        // 15-39%: herido, sangre en la cara
-    '..hhhhhhhh..',
+    '..hhcchh....',
+    '.hccccccch..',
     '.hSSbSSbSSh.',
-    '.hSbSSSSbSh.',
     '.hSpSSpSSpS.',
     '.hSSbSSbSSh.',
     '.hSbSbbSbSh.',
@@ -198,11 +199,11 @@ const FACES = {
     '............',
   ],
   dead: [                       // 0-14%: casi muerto, ojos en X
-    '..hhhhhhhh..',
+    '..hhcchh....',
+    '.hccccccch..',
     '.hbbSSSSbbh.',
     '.hSbSbbSbSh.',
     '.hSpSbbSpSh.',
-    '.hSbSbbSbSh.',
     '.hbSbbbbSbh.',
     '.hmmmmmmmmh.',
     '.hbeeeeeebh.',
@@ -220,8 +221,9 @@ function faceForHp(pct) {
   return 'dead';
 }
 
-/* Devuelve un canvas con la cara según % de vida. */
-function makePlayerFace(pct) {
+/* Devuelve un canvas con la cara del jugador según clase y % de vida. */
+function makePlayerFace(pct, classId = 'warrior') {
   const key = faceForHp(pct);
-  return drawPixelArt(FACES[key], FACE_PALETTE, 4);
+  const palette = FACE_PALETTES[classId] || FACE_PALETTES.warrior;
+  return drawPixelArt(FACES[key], palette, 4);
 }
