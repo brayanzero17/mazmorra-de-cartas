@@ -5,9 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Mazmorra de Cartas</title>
   <link rel="stylesheet" href="css/style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&family=Cinzel:wght@400;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet" />
 </head>
 <body>
+
+  <!-- Flash rojo de daño en pantalla (estilo DOOM) -->
+  <div id="dmg-flash"></div>
 
   <!-- ═══════════════════════════════════════════ PANTALLA LOGIN ═══ -->
   <div id="screen-login" class="screen active">
@@ -138,6 +141,7 @@
 
   <!-- Scripts del juego -->
   <script src="js/config.js"></script>
+  <script src="js/sprites.js"></script>
   <script src="js/data.js"></script>
   <script src="js/game.js"></script>
   <script src="js/ui.js"></script>

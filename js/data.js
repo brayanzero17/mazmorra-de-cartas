@@ -112,11 +112,11 @@ const CLASSES = {
 /* La mazmorra tiene 5 salas. Cada sala tiene un enemigo más fuerte.     */
 
 const ENEMIES = [
-  { name:'Goblin',        sprite:'👹', hp:30,  minAtk:4,  maxAtk:8  },
-  { name:'Esqueleto',     sprite:'💀', hp:45,  minAtk:6,  maxAtk:11 },
-  { name:'Orco Brutal',   sprite:'👺', hp:65,  minAtk:8,  maxAtk:14 },
-  { name:'Nigromante',    sprite:'🧟', hp:85,  minAtk:10, maxAtk:16 },
-  { name:'Dragón Ancestral', sprite:'🐉', hp:120, minAtk:12, maxAtk:20 },
+  { name:'Goblin',           sprite:'👹', spriteKey:'goblin',     hp:30,  minAtk:4,  maxAtk:8  },
+  { name:'Esqueleto',        sprite:'💀', spriteKey:'esqueleto',  hp:45,  minAtk:6,  maxAtk:11 },
+  { name:'Orco Brutal',      sprite:'👺', spriteKey:'orco',       hp:65,  minAtk:8,  maxAtk:14 },
+  { name:'Nigromante',       sprite:'🧟', spriteKey:'nigromante', hp:85,  minAtk:10, maxAtk:16 },
+  { name:'Dragón Ancestral', sprite:'🐉', spriteKey:'dragon',     hp:120, minAtk:12, maxAtk:20 },
 ];
 
 const TOTAL_ROOMS = ENEMIES.length;

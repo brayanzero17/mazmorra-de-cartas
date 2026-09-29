@@ -58,6 +58,7 @@ function spawnEnemy(roomNum) {
   state.enemy = {
     name:   base.name,
     sprite: base.sprite,
+    spriteKey: base.spriteKey,
     hp:     base.hp,
     maxHp:  base.hp,
     minAtk: base.minAtk,

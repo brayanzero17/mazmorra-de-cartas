@@ -49,11 +49,21 @@ function renderAll() {
 }
 
 function renderHUD() {
-  document.getElementById('hud-avatar').textContent     = state.classData.icon;
+  const hpPct = Math.max(0, (state.hp / state.maxHp) * 100);
+
+  // Cara DOOM del jugador: canvas pixel art que cambia con la vida.
+  const avatar = document.getElementById('hud-avatar');
+  if (typeof makePlayerFace === 'function') {
+    const face = makePlayerFace(hpPct);
+    avatar.innerHTML = '';
+    avatar.appendChild(face);
+  } else {
+    avatar.textContent = state.classData.icon; // fallback
+  }
+
   document.getElementById('hud-name').textContent        = state.playerName;
   document.getElementById('hud-class-name').textContent  = state.classData.name;
 
-  const hpPct = Math.max(0, (state.hp / state.maxHp) * 100);
   document.getElementById('bar-hp').style.width = hpPct + '%';
   document.getElementById('txt-hp').textContent = `${state.hp}/${state.maxHp}`;
 
@@ -63,7 +73,20 @@ function renderHUD() {
 
 function renderEnemy() {
   const e = state.enemy;
-  document.getElementById('enemy-sprite').textContent = e.sprite;
+
+  // Sprite pixel art del enemigo (canvas). Fallback a emoji si falla.
+  const spriteEl = document.getElementById('enemy-sprite');
+  let canvas = null;
+  if (typeof makeEnemySprite === 'function' && e.spriteKey) {
+    canvas = makeEnemySprite(e.spriteKey);
+  }
+  if (canvas) {
+    spriteEl.innerHTML = '';
+    spriteEl.appendChild(canvas);
+  } else {
+    spriteEl.textContent = e.sprite;
+  }
+
   document.getElementById('enemy-name').textContent   = e.name;
   const pct = Math.max(0, (e.hp / e.maxHp) * 100);
   document.getElementById('bar-enemy').style.width = pct + '%';
@@ -152,13 +175,49 @@ function renderHand() {
 }
 
 function onCardClick(cardId) {
+  const hpBefore      = state.hp;
+  const enemyHpBefore = state.enemy.hp;
+
   const res = playCard(cardId);
   if (!res.ok) {
     document.getElementById('roll-msg').textContent = '⚠️ ' + res.reason;
     return;
   }
   document.getElementById('roll-msg').textContent = '';
+
+  // Efecto: el enemigo recibió daño → sacudida + sangre
+  if (state.enemy.hp < enemyHpBefore) fxEnemyHit();
+  // Efecto: el jugador recibió daño (contraataque) → flash rojo
+  if (state.hp < hpBefore) fxPlayerHit();
+
   renderAll();
+}
+
+/* ─── Efectos visuales estilo DOOM ─────────────────────────────────── */
+function fxPlayerHit() {
+  const flash = document.getElementById('dmg-flash');
+  if (!flash) return;
+  flash.classList.remove('show');
+  void flash.offsetWidth;      // reinicia la animación
+  flash.classList.add('show');
+}
+
+function fxEnemyHit() {
+  const sprite = document.getElementById('enemy-sprite');
+  if (!sprite) return;
+  sprite.classList.remove('hit');
+  void sprite.offsetWidth;
+  sprite.classList.add('hit');
+
+  // Salpicadura de sangre sobre el enemigo
+  const splat = document.createElement('div');
+  splat.className = 'blood-splat';
+  splat.textContent = '🩸';
+  splat.style.left = (30 + Math.random() * 60) + '%';
+  splat.style.top  = (20 + Math.random() * 50) + '%';
+  sprite.parentElement.style.position = 'relative';
+  sprite.parentElement.appendChild(splat);
+  setTimeout(() => splat.remove(), 600);
 }
 
 /* ──────────────────────────── Botón siguiente sala ─────────────────── */
