@@ -124,8 +124,11 @@ function startCombatFromEncounter(enemyRef) {
 /* ──────────────────────────── Crear enemigo ────────────────────────── */
 function spawnEnemy(roomNum) {
   const base = ENEMIES[roomNum - 1];
+  const theme = (typeof roomTheme === 'function') ? roomTheme(roomNum) : null;
+  const isBoss = theme && theme.boss;
+
   state.enemy = {
-    name:   base.name,
+    name:   isBoss ? `${base.name} (JEFE)` : base.name,
     sprite: base.sprite,
     spriteKey: base.spriteKey,
     hp:     base.hp,
@@ -135,6 +138,7 @@ function spawnEnemy(roomNum) {
     nextAtk: 0,
     frozen:  false,
     poison:  0,
+    isBoss:  !!isBoss,
   };
   telegraphEnemy();
 }

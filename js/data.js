@@ -211,3 +211,43 @@ function randomLoot(roomNum) {
   const table = LOOT_TABLE[Math.min(roomNum, LOOT_TABLE.length) - 1] || LOOT_TABLE[0];
   return table[Math.floor(Math.random() * table.length)];
 }
+
+
+/* =====================================================================
+   TEMÁTICA Y PROGRESIÓN DE SALAS (modo exploración)
+   ---------------------------------------------------------------------
+   Cada sala tiene: paleta de suelo/paredes distinta, nº de enemigos,
+   nº de cofres y un nombre ambiental. La sala 5 es la arena del JEFE.
+   ===================================================================== */
+
+const ROOM_THEMES = [
+  { // Sala 1 — Entrada húmeda
+    name: 'Cripta de Entrada',
+    floorA:'#241c14', floorB:'#201812', wall:'#3a2c1e', accent:'#6fae2f',
+    enemies: 1, chests: 1, boss:false,
+  },
+  { // Sala 2 — Catacumbas
+    name: 'Catacumbas',
+    floorA:'#1e1a22', floorB:'#181420', wall:'#332a3a', accent:'#8a7ab8',
+    enemies: 2, chests: 1, boss:false,
+  },
+  { // Sala 3 — Foso de lava
+    name: 'Foso Ardiente',
+    floorA:'#2a1810', floorB:'#241208', wall:'#4a2a18', accent:'#e8702a',
+    enemies: 2, chests: 2, boss:false,
+  },
+  { // Sala 4 — Salón profanado
+    name: 'Salón Profanado',
+    floorA:'#101a14', floorB:'#0c160f', wall:'#1e3a26', accent:'#a8e832',
+    enemies: 3, chests: 2, boss:false,
+  },
+  { // Sala 5 — GUARIDA DEL DRAGÓN (jefe)
+    name: 'Guarida del Dragón',
+    floorA:'#2a0a08', floorB:'#200604', wall:'#5a1810', accent:'#ff3010',
+    enemies: 1, chests: 0, boss:true,
+  },
+];
+
+function roomTheme(roomNum) {
+  return ROOM_THEMES[Math.min(roomNum, ROOM_THEMES.length) - 1] || ROOM_THEMES[0];
+}

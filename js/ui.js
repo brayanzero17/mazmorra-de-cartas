@@ -238,6 +238,7 @@ function nextRoom() { goNextRoom(); }
 let _exploreInit = false;
 
 function enterExploreScreen(roomNum) {
+  state.room = roomNum;   // sincroniza la sala actual con el HUD
   const canvas = document.getElementById('explore-canvas');
 
   // Inicializar el motor una sola vez
@@ -272,6 +273,12 @@ function renderExploreHUD() {
   document.getElementById('exp-bar-hp').style.width     = hpPct + '%';
   document.getElementById('exp-txt-hp').textContent     = `${state.hp}/${state.maxHp}`;
   document.getElementById('exp-room').textContent       = `${state.room}/${TOTAL_ROOMS}`;
+  // Nombre temático de la sala
+  const rn = document.getElementById('exp-room-name');
+  if (rn && typeof roomTheme === 'function') {
+    const th = roomTheme(state.room);
+    rn.textContent = (th.boss ? '👑 ' : '🗺️ ') + th.name;
+  }
   renderEquip();
 }
 
