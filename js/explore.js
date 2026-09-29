@@ -65,8 +65,8 @@ const EXPLORE = (() => {
     player.x = TILE * 1.6;
     player.y = H / 2;
 
-    // Puerta de salida (derecha)
-    exitDoor = { x: W - TILE, y: H/2 - TILE, w: TILE, h: TILE*2 };
+    // Puerta de salida (derecha) — más grande y visible
+    exitDoor = { x: W - TILE - 6, y: H/2 - TILE*1.5, w: TILE + 6, h: TILE*3 };
 
     // Enemigos: la cantidad la define el tema de la sala
     const eData = enemyList[roomNum - 1];
@@ -87,7 +87,7 @@ const EXPLORE = (() => {
     const spots = [{x:3,y:8},{x:13,y:2},{x:13,y:8},{x:2,y:2},{x:8,y:9}];
     for (let i = 0; i < theme.chests; i++) {
       const s = spots[i];
-      chests.push({ x: s.x*TILE + TILE/2, y: s.y*TILE + TILE/2, opened:false, itemId: randomLoot(roomNum) });
+      chests.push({ x: s.x*TILE + TILE/2, y: s.y*TILE + TILE/2, opened:false, itemId: randomLoot(roomNum, state.classId) });
     }
 
     // Aviso de entrada
@@ -190,18 +190,45 @@ const EXPLORE = (() => {
       ctx.fillRect(0, 0, W, H);
     }
 
-    // Puerta de salida
+    // Puerta de salida — MUY visible cuando la sala está limpia
     if (exitDoor) {
       const open = enemiesLeft() === 0;
-      ctx.fillStyle = open ? '#2a6a2a' : '#3a1010';
-      ctx.fillRect(exitDoor.x, exitDoor.y, exitDoor.w, exitDoor.h);
-      if (open) { // marco brillante pulsante
-        ctx.strokeStyle = `rgba(168,232,50,${0.5 + 0.5*Math.sin(time*0.15)})`;
-        ctx.lineWidth = 4;
+      const cx = exitDoor.x + exitDoor.w/2;
+      const cy = exitDoor.y + exitDoor.h/2;
+
+      if (open) {
+        const pulse = 0.5 + 0.5*Math.sin(time*0.15);
+        // Halo verde brillante detrás de la puerta
+        const g = ctx.createRadialGradient(cx, cy, 6, cx, cy, 70);
+        g.addColorStop(0, `rgba(168,232,50,${0.5*pulse + 0.3})`);
+        g.addColorStop(1, 'rgba(168,232,50,0)');
+        ctx.fillStyle = g;
+        ctx.fillRect(exitDoor.x - 60, exitDoor.y - 40, exitDoor.w + 70, exitDoor.h + 80);
+        // Puerta abierta
+        ctx.fillStyle = '#1a4a1a';
+        ctx.fillRect(exitDoor.x, exitDoor.y, exitDoor.w, exitDoor.h);
+        ctx.strokeStyle = `rgba(168,232,50,${pulse})`;
+        ctx.lineWidth = 5;
         ctx.strokeRect(exitDoor.x+2, exitDoor.y+2, exitDoor.w-4, exitDoor.h-4);
+        // Flecha animada apuntando a la puerta
+        const ax = exitDoor.x - 34 + Math.sin(time*0.1)*6;
+        ctx.fillStyle = `rgba(168,232,50,${0.6 + 0.4*pulse})`;
+        ctx.font = 'bold 30px monospace'; ctx.textAlign = 'center';
+        ctx.fillText('➡', ax, cy + 10);
+        ctx.font = '30px serif';
+        ctx.fillStyle = '#fff';
+        ctx.fillText('🚪', cx, cy + 10);
+        // Etiqueta "SALIDA"
+        ctx.fillStyle = `rgba(168,232,50,${pulse})`;
+        ctx.font = '13px monospace';
+        ctx.fillText('SALIDA', cx, exitDoor.y - 8);
+      } else {
+        // Puerta cerrada (aún hay enemigos)
+        ctx.fillStyle = '#3a1010';
+        ctx.fillRect(exitDoor.x, exitDoor.y, exitDoor.w, exitDoor.h);
+        ctx.font = '28px serif'; ctx.textAlign = 'center';
+        ctx.fillText('🔒', cx, cy + 8);
       }
-      ctx.font = '22px serif'; ctx.textAlign = 'center';
-      ctx.fillText(open ? '🚪' : '🔒', exitDoor.x + exitDoor.w/2, exitDoor.y + exitDoor.h/2 + 8);
     }
 
     // Paredes (color del tema)

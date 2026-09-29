@@ -27,6 +27,12 @@ El juego tiene **dos modos** que se alternan (estilo Undertale / RPG clásico):
 - ⚔️ **Armas**: aumentan el daño de tus cartas.
 - 💠 **Reliquias**: bonus pasivos (+dado, +HP máximo...).
 
+Además, **cada clase encuentra equipo temático propio**:
+- ⚔️ **Guerrero**: mandobles, yelmos, estandartes de guerra.
+- 🔮 **Mago**: grimorios, orbes de maná, varitas que potencian sus hechizos.
+- 🏹 **Elfo**: arcos largos, carcajes, mantos del bosque.
+- 🗡️ **Pícaro**: dagas gemelas, capas de sombras, frascos de veneno.
+
 ### Pasos
 1. Escribe tu nombre de aventurero.
 2. Elige una de las **4 clases** (cada una juega distinto según el dado):

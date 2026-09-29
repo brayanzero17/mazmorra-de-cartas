@@ -194,6 +194,52 @@ const ITEMS = {
                     desc:'+25 HP máximo.', maxHpBonus:25 },
   anillo_furia:   { id:'anillo_furia',   name:'Anillo de Furia',  icon:'💍', type:'relic', slot:'relic',
                     desc:'+2 daño y +1 al dado.', attack:2, diceBonus:1 },
+
+  /* ── OBJETOS POR CLASE ────────────────────────────────────────────
+     Cada clase tiene equipo temático que potencia SU estilo de juego.
+     Campo forClass: a qué clase pertenece (para el loot filtrado).     */
+
+  /* GUERRERO — armas y protección física */
+  w_mandoble:     { id:'w_mandoble',    name:'Mandoble del Campeón', icon:'⚔️', type:'weapon', slot:'weapon',
+                    forClass:'warrior', desc:'+5 daño a tus golpes.', attack:5 },
+  w_yelmo:        { id:'w_yelmo',       name:'Yelmo de Hierro',      icon:'⛑️', type:'armor',  slot:'armor',
+                    forClass:'warrior', desc:'Reduce 5 de daño por golpe.', defense:5 },
+  w_estandarte:   { id:'w_estandarte',  name:'Estandarte de Guerra', icon:'🚩', type:'relic',  slot:'relic',
+                    forClass:'warrior', desc:'+3 daño y +20 HP máximo.', attack:3, maxHpBonus:20 },
+
+  /* MAGO — mejoras de hechizos y poder arcano */
+  m_grimorio:     { id:'m_grimorio',    name:'Grimorio Arcano',      icon:'📖', type:'weapon', slot:'weapon',
+                    forClass:'mage', desc:'+5 de poder a tus hechizos.', attack:5 },
+  m_orbe:         { id:'m_orbe',        name:'Orbe de Maná',         icon:'🔮', type:'relic',  slot:'relic',
+                    forClass:'mage', desc:'+1 al dado (hechizos más potentes).', diceBonus:1 },
+  m_tunica:       { id:'m_tunica',      name:'Túnica Encantada',     icon:'🧥', type:'armor',  slot:'armor',
+                    forClass:'mage', desc:'Barrera mágica: reduce 4 de daño.', defense:4 },
+  m_varita:       { id:'m_varita',      name:'Varita del Archimago', icon:'🪄', type:'relic',  slot:'relic',
+                    forClass:'mage', desc:'+3 poder mágico y +1 al dado.', attack:3, diceBonus:1 },
+
+  /* ELFO — arco y precisión */
+  e_arco_largo:   { id:'e_arco_largo',  name:'Arco Largo Élfico',    icon:'🏹', type:'weapon', slot:'weapon',
+                    forClass:'elf', desc:'+5 daño a tus flechas.', attack:5 },
+  e_carcaj:       { id:'e_carcaj',      name:'Carcaj Encantado',     icon:'🎯', type:'relic',  slot:'relic',
+                    forClass:'elf', desc:'+1 al dado (mejor puntería).', diceBonus:1 },
+  e_manto:        { id:'e_manto',       name:'Manto del Bosque',     icon:'🍃', type:'armor',  slot:'armor',
+                    forClass:'elf', desc:'Reduce 4 de daño por golpe.', defense:4 },
+
+  /* PÍCARO — sigilo, veneno y agilidad */
+  r_dagas:        { id:'r_dagas',       name:'Dagas Gemelas',        icon:'🗡️', type:'weapon', slot:'weapon',
+                    forClass:'rogue', desc:'+5 daño a tus ataques furtivos.', attack:5 },
+  r_capa:         { id:'r_capa',        name:'Capa de Sombras',      icon:'🥷', type:'armor',  slot:'armor',
+                    forClass:'rogue', desc:'Reduce 4 de daño (evasión).', defense:4 },
+  r_veneno:       { id:'r_veneno',      name:'Frasco de Veneno',     icon:'☠️', type:'relic',  slot:'relic',
+                    forClass:'rogue', desc:'+2 daño y +1 al dado.', attack:2, diceBonus:1 },
+};
+
+/* Objetos temáticos por clase (para el loot filtrado). */
+const CLASS_ITEMS = {
+  warrior: ['w_mandoble', 'w_yelmo', 'w_estandarte'],
+  mage:    ['m_grimorio', 'm_orbe', 'm_tunica', 'm_varita'],
+  elf:     ['e_arco_largo', 'e_carcaj', 'e_manto'],
+  rogue:   ['r_dagas', 'r_capa', 'r_veneno'],
 };
 
 /* Botín posible por sala (índice = sala-1). Cada cofre saca uno al azar
@@ -206,8 +252,20 @@ const LOOT_TABLE = [
   ['elixir_vida', 'armadura_placas', 'hacha_guerra', 'anillo_furia'],         // Sala 5
 ];
 
-/* Devuelve el id de un objeto al azar según la sala. */
-function randomLoot(roomNum) {
+/* Devuelve el id de un objeto al azar según la sala y la clase.
+   ~55% de las veces sale un objeto TEMÁTICO de la clase del jugador
+   (arma/armadura/reliquia acorde), el resto son consumibles/genéricos.
+   Así el Mago encuentra hechizos, el Guerrero armas, etc. */
+function randomLoot(roomNum, classId) {
+  const cid = classId || (typeof state !== 'undefined' ? state.classId : null);
+  const classPool = CLASS_ITEMS[cid] || [];
+
+  // A partir de la sala 1 ya puede salir loot de clase; más probable si avanzas
+  if (classPool.length && Math.random() < 0.55) {
+    return classPool[Math.floor(Math.random() * classPool.length)];
+  }
+
+  // Si no, loot genérico de la sala (pociones, etc.)
   const table = LOOT_TABLE[Math.min(roomNum, LOOT_TABLE.length) - 1] || LOOT_TABLE[0];
   return table[Math.floor(Math.random() * table.length)];
 }
