@@ -138,9 +138,12 @@
       <div id="hand-cards" class="hand-cards"></div>
     </div>
 
-    <!-- Botón volver a explorar -->
-    <div id="next-room-btn" class="next-room hidden">
-      <button class="btn-primary" onclick="nextRoom()">🗺️ Volver a explorar la mazmorra</button>
+    <!-- Botón volver a explorar (overlay centrado, siempre visible) -->
+    <div id="next-room-btn" class="next-room-overlay hidden">
+      <div class="next-room-card">
+        <div class="next-room-title">🏆 ¡Enemigo derrotado!</div>
+        <button class="btn-primary" onclick="nextRoom()">🗺️ Volver a explorar la mazmorra</button>
+      </div>
     </div>
 
   </div>

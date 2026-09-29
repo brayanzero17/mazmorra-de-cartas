@@ -289,22 +289,29 @@ function onEnemyDefeated() {
 /* Vuelve al mapa de exploración tras ganar un combate. */
 function goNextRoom() {
   hideNextRoomButton();
-  if (typeof EXPLORE !== 'undefined' && state.currentEnemyRef) {
-    EXPLORE.defeatEnemy(state.currentEnemyRef);
-    state.currentEnemyRef = null;
-  }
-  if (typeof enterExploreScreen === 'function') {
-    // Volvemos al mapa de la MISMA sala (el enemigo ya no está)
-    showScreen('screen-explore');
-    EXPLORE.start();
-  } else {
-    // Fallback sin exploración: avanzar de sala como antes
+
+  // Sin modo exploración: avanzar de sala como antes (fallback)
+  if (typeof EXPLORE === 'undefined' || typeof enterExploreScreen !== 'function') {
     if (state.room >= TOTAL_ROOMS) { onVictory(); return; }
     state.room += 1;
     spawnEnemy(state.room);
     resetTurn();
     renderAll();
+    return;
   }
+
+  // Marcar como derrotado al enemigo con el que peleamos
+  if (state.currentEnemyRef) {
+    EXPLORE.defeatEnemy(state.currentEnemyRef);
+    state.currentEnemyRef = null;
+  }
+
+  // Volver al mapa de la MISMA sala y REANUDAR el bucle de animación.
+  // (importante: mostrar la pantalla ANTES de start para que el canvas
+  //  esté visible y requestAnimationFrame corra con normalidad)
+  showScreen('screen-explore');
+  renderExploreHUD();
+  EXPLORE.resume();
 }
 
 /* Llamado por el modo exploración cuando el jugador cruza la salida. */

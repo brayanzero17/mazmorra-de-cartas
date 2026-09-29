@@ -263,6 +263,17 @@ const EXPLORE = (() => {
   function start() { running = true; if (!raf) loop(); }
   function stop() { running = false; if (raf) { cancelAnimationFrame(raf); raf = null; } }
 
+  /* Reanuda el bucle de forma robusta tras volver del combate.
+     Cancela cualquier frame pendiente y arranca uno nuevo, y limpia
+     el estado de teclas para que el jugador no quede "trabado". */
+  function resume() {
+    if (raf) { cancelAnimationFrame(raf); raf = null; }
+    for (const k in keys) keys[k] = false;   // soltar teclas atascadas
+    joy.dx = 0; joy.dy = 0;
+    running = true;
+    loop();
+  }
+
   /* ─── Joystick táctil ───────────────────────────────────────────── */
   const joy = { dx: 0, dy: 0 };
   function bindTouch(padEl, stickEl) {
@@ -298,7 +309,7 @@ const EXPLORE = (() => {
   }
 
   return {
-    init, buildRoom, start, stop, defeatEnemy, bindTouch,
+    init, buildRoom, start, stop, resume, defeatEnemy, bindTouch,
     set onEncounter(fn) { onEncounter = fn; },
     set onExit(fn)      { onExit = fn; },
     set onPickup(fn)    { onPickup = fn; },
