@@ -339,6 +339,9 @@ function renderVictory() {
 
 function restartGame() {
   document.getElementById('roll-msg').textContent = '';
+  // Asegurar que el mapa de exploración esté detenido antes de reiniciar
+  if (typeof EXPLORE !== 'undefined') EXPLORE.stop();
+  hideNextRoomButton();
   showScreen('screen-class');
   renderClassSelection();
 }

@@ -75,6 +75,11 @@ function acquireItem(itemId) {
 
 /* ──────────────────────────── Inicio de partida ────────────────────── */
 function initGame(classId) {
+  // Detener cualquier bucle de exploración anterior (evita que un mapa
+  // viejo siga corriendo al reiniciar la partida con otra clase).
+  if (typeof EXPLORE !== 'undefined') EXPLORE.stop();
+  hideNextRoomButton();
+
   const cls = CLASSES[classId];
   state.classId   = classId;
   state.classData = cls;
@@ -328,6 +333,9 @@ function onRoomCleared() {
 function onPlayerDefeated() {
   logMsg('💀 Has sido derrotado...', 'damage');
   sfx('defeat');
+  if (typeof EXPLORE !== 'undefined') EXPLORE.stop();  // detener el mapa
+  hideNextRoomButton();
+  state.currentEnemyRef = null;
   saveProgress('defeat');
   renderGameOver();
   showScreen('screen-gameover');
@@ -336,6 +344,9 @@ function onPlayerDefeated() {
 function onVictory() {
   logMsg('👑 ¡Has conquistado la mazmorra entera!', 'special');
   sfx('victory');
+  if (typeof EXPLORE !== 'undefined') EXPLORE.stop();  // detener el mapa
+  hideNextRoomButton();
+  state.currentEnemyRef = null;
   saveProgress('victory');
   renderVictory();
   showScreen('screen-victory');
