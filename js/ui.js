@@ -44,9 +44,15 @@ function renderClassSelection() {
         <span class="class-stat">${cardIco} ${cls.cards.length}</span>
       </div>
     `;
-    // Insertar el retrato pixel art (canvas)
+    // Insertar el retrato: imagen externa (assets/) si existe, si no pixel art
     const slot = card.querySelector('.class-portrait');
-    if (typeof makePortrait === 'function') {
+    if (typeof hasClassImage === 'function' && hasClassImage(cls.id)) {
+      const img = document.createElement('img');
+      img.src = getClassImage(cls.id).toDataURL();
+      img.className = 'portrait-img';
+      img.alt = cls.name;
+      slot.appendChild(img);
+    } else if (typeof makePortrait === 'function') {
       const pt = makePortrait(cls.id, 6);
       if (pt) { pt.className = 'portrait-canvas'; slot.appendChild(pt); }
       else slot.textContent = cls.icon;

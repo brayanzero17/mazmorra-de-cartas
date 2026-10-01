@@ -356,6 +356,24 @@ const EXPLORE = (() => {
     ctx.ellipse(px, py + size/2 - 4, size*0.28, size*0.12, 0, 0, Math.PI*2);
     ctx.fill();
 
+    // Si la clase tiene imagen externa (assets/), úsala en el mapa
+    if (typeof getClassImage === 'function' && getClassImage(state.classId)) {
+      const img = getClassImage(state.classId);
+      const isize = 54;
+      const bob2 = player.moving ? Math.sin(player.frame * 3) * 2 : 0; // leve rebote al caminar
+      ctx.imageSmoothingEnabled = false;
+      const flip = (player.dir === 'left');
+      ctx.save();
+      if (flip) {
+        ctx.translate(px, 0); ctx.scale(-1, 1);
+        ctx.drawImage(img, -isize/2, py - isize/2 + bob2, isize, isize);
+      } else {
+        ctx.drawImage(img, px - isize/2, py - isize/2 + bob2, isize, isize);
+      }
+      ctx.restore();
+      return;
+    }
+
     let cv = null;
     if (typeof makeCharSprite === 'function') {
       let frameKey = 'idle';

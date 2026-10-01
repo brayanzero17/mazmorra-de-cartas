@@ -834,6 +834,17 @@ input[type="text"]::placeholder { color: var(--text-dim); }
 }
 .class-card:hover .portrait-canvas { transform: scale(1.08) translateY(-2px); }
 
+/* Imagen externa (assets/) como retrato */
+.portrait-img {
+  image-rendering: pixelated;
+  height: 110px;
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 3px 0 #000);
+  transition: transform .15s;
+}
+.class-card:hover .portrait-img { transform: scale(1.08) translateY(-2px); }
+
 /* Iconos pixel art inline (reemplazan emojis) */
 .px-icon {
   image-rendering: pixelated;
