@@ -28,14 +28,31 @@ function renderClassSelection() {
     const card = document.createElement('div');
     card.className = `class-card ${cls.id}`;
     card.onclick = () => initGame(cls.id);
+
+    const diceIco  = (typeof iconHTML === 'function') ? iconHTML('dice', 2)  : '🎲';
+    const heartIco = (typeof iconHTML === 'function') ? iconHTML('heart', 2) : '❤️';
+    const cardIco  = (typeof iconHTML === 'function') ? iconHTML('card', 2)  : '🃏';
+
     card.innerHTML = `
-      <div class="class-icon">${cls.icon}</div>
+      <div class="class-portrait"></div>
       <div class="class-name">${cls.name}</div>
       <div class="class-style">${cls.style}</div>
-      <div class="class-dice">🎲 ${cls.diceHint}</div>
+      <div class="class-dice">${diceIco} ${cls.diceHint}</div>
       <div class="class-desc">${cls.desc}</div>
-      <div class="class-dice" style="margin-top:.6rem;">❤️ ${cls.maxHp} HP · ${cls.cards.length} cartas</div>
+      <div class="class-stats">
+        <span class="class-stat">${heartIco} ${cls.maxHp}</span>
+        <span class="class-stat">${cardIco} ${cls.cards.length}</span>
+      </div>
     `;
+    // Insertar el retrato pixel art (canvas)
+    const slot = card.querySelector('.class-portrait');
+    if (typeof makePortrait === 'function') {
+      const pt = makePortrait(cls.id, 6);
+      if (pt) { pt.className = 'portrait-canvas'; slot.appendChild(pt); }
+      else slot.textContent = cls.icon;
+    } else {
+      slot.textContent = cls.icon;
+    }
     grid.appendChild(card);
   });
 }
@@ -380,6 +397,23 @@ function fullBagSkip() {
   document.getElementById('fullbag-modal').classList.add('hidden');
   logMsg('Dejaste el objeto en el cofre.', 'info');
 }
+
+/* ──────────────────────────── Iconos del HUD ───────────────────────── */
+/* Reemplaza los emojis de las etiquetas por iconos pixel art propios.
+   Busca elementos con data-icon y les antepone el icono correspondiente. */
+function injectHudIcons() {
+  if (typeof iconHTML !== 'function') return;
+  document.querySelectorAll('[data-icon]').forEach(el => {
+    if (el.dataset.iconDone) return;       // no duplicar
+    const name = el.getAttribute('data-icon');
+    const ico = iconHTML(name, 2);
+    if (ico) {
+      el.innerHTML = ico + ' ' + el.innerHTML;
+      el.dataset.iconDone = '1';
+    }
+  });
+}
+window.addEventListener('load', injectHudIcons);
 
 /* ──────────────────────────── Sonido ───────────────────────────────── */
 function toggleSound() {

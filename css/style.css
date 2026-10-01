@@ -818,3 +818,44 @@ input[type="text"]::placeholder { color: var(--text-dim); }
 .fullbag-opt span  { color: var(--bone); font-size: 1.15rem; }
 .fullbag-opt small { color: var(--text-dim); font-size: .95rem; }
 .fullbag-skip { margin: 1rem; width: calc(100% - 2rem); }
+
+/* ──────────────────────── Retratos pixel art de clase ──────────────── */
+.class-portrait {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 110px;
+  margin-bottom: .4rem;
+}
+.portrait-canvas {
+  image-rendering: pixelated;
+  filter: drop-shadow(0 3px 0 #000);
+  transition: transform .15s;
+}
+.class-card:hover .portrait-canvas { transform: scale(1.08) translateY(-2px); }
+
+/* Iconos pixel art inline (reemplazan emojis) */
+.px-icon {
+  image-rendering: pixelated;
+  width: 16px; height: 16px;
+  vertical-align: middle;
+  margin-right: 2px;
+}
+
+/* Fila de stats de la tarjeta de clase */
+.class-stats {
+  display: flex;
+  justify-content: center;
+  gap: .8rem;
+  margin-top: .7rem;
+}
+.class-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: .2rem;
+  background: #000;
+  border: 2px solid var(--rust);
+  color: var(--amber);
+  font-size: 1.05rem;
+  padding: .15rem .55rem;
+}
