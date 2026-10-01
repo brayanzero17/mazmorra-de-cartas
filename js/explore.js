@@ -20,7 +20,7 @@ const EXPLORE = (() => {
   let canvas, ctx;
   let raf = null, running = false;
 
-  const player = { x: 0, y: 0, r: 14, speed: 2.6, dir: 'down', frame: 0 };
+  const player = { x: 0, y: 0, r: 14, speed: 2.8, dir: 'down', frame: 0, vx: 0, vy: 0, moving: false };
   const keys = {};
   let walls = [];
   let enemies = [];
@@ -64,6 +64,7 @@ const EXPLORE = (() => {
     // Jugador entra por la izquierda
     player.x = TILE * 1.6;
     player.y = H / 2;
+    player.vx = 0; player.vy = 0; player.moving = false;
 
     // Puerta de salida (derecha) — más grande y visible
     exitDoor = { x: W - TILE - 6, y: H/2 - TILE*1.5, w: TILE + 6, h: TILE*3 };
@@ -116,16 +117,33 @@ const EXPLORE = (() => {
     if (keys['arrowdown'] || keys['s']) dy += 1;
     dx += joy.dx; dy += joy.dy;
 
+    // Dirección objetivo (normalizada)
+    let tvx = 0, tvy = 0;
     if (dx || dy) {
       const len = Math.hypot(dx, dy) || 1;
-      dx /= len; dy /= len;
-      // Movimiento escalado por dt → misma velocidad en todo equipo/sala
-      const nx = player.x + dx * player.speed * dt;
-      const ny = player.y + dy * player.speed * dt;
-      if (!hitsWall(nx, player.y)) player.x = nx;
-      if (!hitsWall(player.x, ny)) player.y = ny;
-      player.dir = Math.abs(dx) > Math.abs(dy) ? (dx>0?'right':'left') : (dy>0?'down':'up');
-      player.frame += 0.2 * dt;
+      tvx = (dx / len) * player.speed;
+      tvy = (dy / len) * player.speed;
+    }
+    // Movilidad suave: la velocidad actual se acerca a la objetivo
+    // (aceleración al arrancar, deslizamiento al soltar) → más fluido.
+    const accel = 0.25;
+    player.vx += (tvx - player.vx) * accel * dt;
+    player.vy += (tvy - player.vy) * accel * dt;
+
+    // Aplicar movimiento con colisión por ejes (deslizar por paredes)
+    const nx = player.x + player.vx * dt;
+    const ny = player.y + player.vy * dt;
+    if (!hitsWall(nx, player.y)) player.x = nx; else player.vx = 0;
+    if (!hitsWall(player.x, ny)) player.y = ny; else player.vy = 0;
+
+    const spd = Math.hypot(player.vx, player.vy);
+    player.moving = spd > 0.3;
+    if (player.moving) {
+      // dirección según la velocidad real
+      player.dir = Math.abs(player.vx) > Math.abs(player.vy)
+                 ? (player.vx > 0 ? 'right' : 'left')
+                 : (player.vy > 0 ? 'down' : 'up');
+      player.frame += 0.12 * dt;
     }
 
     enemies.forEach(e => {
@@ -260,28 +278,24 @@ const EXPLORE = (() => {
       }
     });
 
-    // Enemigos
+    // Enemigos (sprite de cuerpo completo con leve bob)
     enemies.forEach(e => {
       if (!e.alive) return;
-      const size = e.boss ? 52 : 36;
-      const cv = (typeof makeEnemySprite === 'function') ? makeEnemySprite(e.spriteKey) : null;
-      if (cv) { ctx.imageSmoothingEnabled = false; ctx.drawImage(cv, e.x - size/2, e.y - size/2, size, size); }
+      const size = e.boss ? 56 : 40;
+      const ebob = Math.sin(time*0.1 + e.x) * 2;
+      let cv = null;
+      if (typeof makeEnemyBody === 'function') {
+        const fr = (Math.floor(time*0.12) % 2 === 0) ? 'a' : 'b';
+        cv = makeEnemyBody(e.spriteKey, fr);
+      }
+      if (!cv && typeof makeEnemySprite === 'function') cv = makeEnemySprite(e.spriteKey);
+      if (cv) { ctx.imageSmoothingEnabled = false; ctx.drawImage(cv, e.x - size/2, e.y - size/2 + ebob, size, size); }
       else { ctx.fillStyle = '#b83020'; ctx.beginPath(); ctx.arc(e.x, e.y, e.r, 0, 7); ctx.fill(); }
-      // Corona sobre el jefe
-      if (e.boss) { ctx.font = '20px serif'; ctx.textAlign = 'center'; ctx.fillText('👑', e.x, e.y - size/2 - 4); }
+      if (e.boss) { ctx.font = '22px serif'; ctx.textAlign = 'center'; ctx.fillText('👑', e.x, e.y - size/2 - 2 + ebob); }
     });
 
-    // Jugador
-    const bob = Math.sin(player.frame) * 2;
-    ctx.fillStyle = playerColor();
-    ctx.beginPath(); ctx.arc(player.x, player.y + bob, player.r, 0, 7); ctx.fill();
-    ctx.lineWidth = 2; ctx.strokeStyle = '#000';
-    ctx.beginPath(); ctx.arc(player.x, player.y + bob, player.r, 0, 7); ctx.stroke();
-    ctx.fillStyle = '#fff';
-    const ox = player.dir==='left'?-4:player.dir==='right'?4:0;
-    const oy = player.dir==='up'?-4:player.dir==='down'?3:0;
-    ctx.fillRect(player.x - 5 + ox, player.y - 3 + oy + bob, 3, 3);
-    ctx.fillRect(player.x + 2 + ox, player.y - 3 + oy + bob, 3, 3);
+    // Jugador: sprite de cuerpo completo con animación de caminar
+    drawPlayer();
 
     // Mensaje flotante
     if (messageTimer > 0 && message) {
@@ -298,6 +312,45 @@ const EXPLORE = (() => {
 
   function playerColor() {
     return ({ warrior:'#b83020', elf:'#4a9a3a', mage:'#6a4aaa', rogue:'#4a4a4a' })[state.classId] || '#c8963c';
+  }
+
+  /* Dibuja al jugador como sprite de cuerpo completo con animación de
+     caminar. Alterna 2 frames al moverse, idle al estar quieto, y se
+     voltea horizontalmente según la dirección. Incluye sombra. */
+  function drawPlayer() {
+    const size = 42;
+    const px = player.x, py = player.y;
+
+    // Sombra elíptica bajo el personaje
+    ctx.fillStyle = 'rgba(0,0,0,.35)';
+    ctx.beginPath();
+    ctx.ellipse(px, py + size/2 - 4, size*0.28, size*0.12, 0, 0, Math.PI*2);
+    ctx.fill();
+
+    let cv = null;
+    if (typeof makeCharSprite === 'function') {
+      let frameKey = 'idle';
+      if (player.moving) frameKey = (Math.floor(player.frame * 2) % 2 === 0) ? 'A' : 'B';
+      cv = makeCharSprite(state.classId, frameKey);
+    }
+
+    if (cv) {
+      ctx.imageSmoothingEnabled = false;
+      const flip = (player.dir === 'left');
+      ctx.save();
+      if (flip) {
+        ctx.translate(px, 0);
+        ctx.scale(-1, 1);
+        ctx.drawImage(cv, -size/2, py - size/2, size, size);
+      } else {
+        ctx.drawImage(cv, px - size/2, py - size/2, size, size);
+      }
+      ctx.restore();
+    } else {
+      // Fallback: círculo
+      ctx.fillStyle = playerColor();
+      ctx.beginPath(); ctx.arc(px, py, player.r, 0, 7); ctx.fill();
+    }
   }
 
   /* ─── Bucle ─────────────────────────────────────────────────────── */
@@ -320,6 +373,7 @@ const EXPLORE = (() => {
     if (raf) { cancelAnimationFrame(raf); raf = null; }   // evita loops duplicados
     for (const k in keys) keys[k] = false;
     joy.dx = 0; joy.dy = 0;
+    player.vx = 0; player.vy = 0; player.moving = false;  // sin deriva al reanudar
     running = true;
     lastT = 0;
     raf = requestAnimationFrame(loop);
