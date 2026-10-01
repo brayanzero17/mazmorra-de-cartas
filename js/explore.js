@@ -69,17 +69,20 @@ const EXPLORE = (() => {
     // Puerta de salida (derecha) — más grande y visible
     exitDoor = { x: W - TILE - 6, y: H/2 - TILE*1.5, w: TILE + 6, h: TILE*3 };
 
-    // Enemigos: la cantidad la define el tema de la sala
+    // Enemigos: la cantidad la define el tema de la sala.
+    // Busca una posición LIBRE (sin pared) para que nunca aparezcan atascados.
     const eData = enemyList[roomNum - 1];
     const count = theme.enemies;
+    const r = isBoss ? 24 : 16;
     for (let i = 0; i < count; i++) {
-      const gx = TILE * (6 + (i % 3) * 3);
-      const gy = TILE * (3 + Math.floor(i / 3 + i) % 5 + 1);
+      const pos = findFreeSpot(r, i);
+      const sp = (isBoss ? 0.7 : 1.0);
       enemies.push({
-        x: gx, y: Math.min(gy, H - TILE*2),
-        r: isBoss ? 26 : 16, alive: true,
-        vx: (Math.random()<.5?-1:1) * (isBoss ? 0.7 : 1.0),
-        vy: (Math.random()<.5?-1:1) * (isBoss ? 0.7 : 1.0),
+        x: pos.x, y: pos.y,
+        r, alive: true,
+        vx: (Math.random()<.5?-1:1) * sp,
+        vy: (Math.random()<.5?-1:1) * sp,
+        speed: sp,
         spriteKey: eData.spriteKey, name: eData.name, roomNum, boss: isBoss,
       });
     }
@@ -103,6 +106,26 @@ const EXPLORE = (() => {
     return dx*dx + dy*dy < r*r;
   }
   function hitsWall(x, y) { return walls.some(w => circleRect(x, y, player.r, w)); }
+
+  /* ¿Hay pared en (x,y) para un radio r dado? (para enemigos). */
+  function hitsWallR(x, y, r) { return walls.some(w => circleRect(x, y, r, w)); }
+
+  /* Busca una celda libre (sin pared, lejos de la entrada del jugador)
+     para colocar un enemigo. Prueba varias posiciones candidatas. */
+  function findFreeSpot(r, seed) {
+    const candidates = [
+      {x:9,y:3},{x:11,y:5},{x:7,y:7},{x:12,y:8},{x:6,y:4},
+      {x:10,y:6},{x:8,y:4},{x:13,y:6},{x:9,y:8},{x:11,y:3},
+    ];
+    // Empezar en una candidata distinta según el índice del enemigo
+    for (let k = 0; k < candidates.length; k++) {
+      const c = candidates[(seed + k) % candidates.length];
+      const x = c.x * TILE + TILE/2, y = c.y * TILE + TILE/2;
+      if (!hitsWallR(x, y, r) && x > TILE*3) return { x, y };  // lejos de la entrada
+    }
+    // Si nada sirve, centro del mapa
+    return { x: W/2, y: H/2 };
+  }
 
   function enemiesLeft() { return enemies.filter(e => e.alive).length; }
 
@@ -148,10 +171,28 @@ const EXPLORE = (() => {
 
     enemies.forEach(e => {
       if (!e.alive) return;
-      // Enemigos también escalados por dt
-      const nx = e.x + e.vx * dt, ny = e.y + e.vy * dt;
-      if (hitsWall(nx, e.y) || nx < TILE+e.r || nx > W-TILE-e.r) e.vx *= -1; else e.x = nx;
-      if (hitsWall(e.x, ny) || ny < TILE+e.r || ny > H-TILE-e.r) e.vy *= -1; else e.y = ny;
+      const sp = e.speed || 1.0;
+      // Movimiento con su propio radio; si choca, invierte dirección.
+      const nx = e.x + e.vx * dt;
+      const ny = e.y + e.vy * dt;
+      let movedX = false, movedY = false;
+      if (!hitsWallR(nx, e.y, e.r) && nx > TILE+e.r && nx < W-TILE-e.r) { e.x = nx; movedX = true; } else e.vx = -e.vx;
+      if (!hitsWallR(e.x, ny, e.r) && ny > TILE+e.r && ny < H-TILE-e.r) { e.y = ny; movedY = true; } else e.vy = -e.vy;
+
+      // Anti-atasco: si no logró moverse en ningún eje durante varios
+      // frames, reasigna una dirección nueva aleatoria (lo "despega").
+      if (!movedX && !movedY) {
+        e.stuck = (e.stuck || 0) + 1;
+        if (e.stuck > 8) {
+          const ang = Math.random() * Math.PI * 2;
+          e.vx = Math.cos(ang) * sp;
+          e.vy = Math.sin(ang) * sp;
+          e.stuck = 0;
+        }
+      } else {
+        e.stuck = 0;
+      }
+
       const d = Math.hypot(e.x - player.x, e.y - player.y);
       if (d < e.r + player.r + 2) triggerCombat(e);
     });
@@ -431,11 +472,14 @@ const EXPLORE = (() => {
   let lastT = 0;
   function loop(now) {
     if (!running) return;
-    if (!lastT) lastT = now;
-    let dt = (now - lastT) / (1000 / 60);   // normalizado a 60fps
+    // Primer frame tras arrancar: sólo fija el reloj, no mueve nada
+    // (evita un dt gigante inicial que dispara la velocidad).
+    if (!lastT) { lastT = now; raf = requestAnimationFrame(loop); return; }
+    let dt = (now - lastT) / (1000 / 60);   // 1.0 = velocidad a 60fps
     lastT = now;
-    // Cap de dt para evitar "saltos" tras una pausa (ej. volver de combate)
-    if (!dt || dt > 3) dt = 1;
+    // Cap estricto: nunca más de 1.5x (evita acelerones por lag o pestaña oculta)
+    if (!dt || dt < 0) dt = 1;
+    if (dt > 1.5) dt = 1.5;
     update(dt);
     draw();
     raf = requestAnimationFrame(loop);
