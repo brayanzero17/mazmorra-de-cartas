@@ -194,11 +194,23 @@ const EXPLORE = (() => {
   function draw() {
     ctx.clearRect(0, 0, W, H);
 
-    // Suelo con la paleta del tema
+    // Suelo con baldosas biseladas (sombra + luz para dar relieve)
     for (let y = 0; y < ROWS; y++)
       for (let x = 0; x < COLS; x++) {
+        const px = x*TILE, py = y*TILE;
         ctx.fillStyle = ((x+y)%2) ? theme.floorA : theme.floorB;
-        ctx.fillRect(x*TILE, y*TILE, TILE, TILE);
+        ctx.fillRect(px, py, TILE, TILE);
+        // Bisel: línea clara arriba/izq, oscura abajo/der
+        ctx.fillStyle = 'rgba(255,255,255,0.03)';
+        ctx.fillRect(px, py, TILE, 2);
+        ctx.fillRect(px, py, 2, TILE);
+        ctx.fillStyle = 'rgba(0,0,0,0.25)';
+        ctx.fillRect(px, py+TILE-2, TILE, 2);
+        ctx.fillRect(px+TILE-2, py, 2, TILE);
+        // Grietas/manchas decorativas deterministas (no parpadean)
+        const seed = (x*7 + y*13) % 11;
+        if (seed === 0) { ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.fillRect(px+8, py+10, 6, 3); }
+        else if (seed === 3) { ctx.fillStyle = 'rgba(0,0,0,0.25)'; ctx.fillRect(px+22, py+26, 4, 4); }
       }
 
     // Ambiente de jefe: resplandor rojo pulsante en el centro
@@ -252,12 +264,29 @@ const EXPLORE = (() => {
       }
     }
 
-    // Paredes (color del tema)
+    // Paredes de ladrillo con relieve 3D (realce arriba, sombra abajo)
     walls.forEach(w => {
       ctx.fillStyle = theme.wall;
       ctx.fillRect(w.x, w.y, w.w, w.h);
-      ctx.strokeStyle = '#00000055'; ctx.lineWidth = 2;
-      for (let yy = w.y; yy < w.y + w.h; yy += 20) ctx.strokeRect(w.x+1, yy+1, w.w-2, 18);
+      // Ladrillos con juntas y luz/sombra
+      const bh = 10; // alto de ladrillo
+      let row = 0;
+      for (let yy = w.y; yy < w.y + w.h; yy += bh, row++) {
+        const offset = (row % 2) * 10; // ladrillos alternados
+        for (let xx = w.x - offset; xx < w.x + w.w; xx += 20) {
+          const bx = Math.max(w.x, xx), bw = Math.min(xx+18, w.x+w.w) - bx;
+          if (bw <= 0) continue;
+          // luz arriba
+          ctx.fillStyle = 'rgba(255,255,255,0.06)';
+          ctx.fillRect(bx, yy+1, bw, 2);
+          // sombra abajo
+          ctx.fillStyle = 'rgba(0,0,0,0.35)';
+          ctx.fillRect(bx, yy+bh-2, bw, 2);
+        }
+        // junta horizontal
+        ctx.fillStyle = 'rgba(0,0,0,0.4)';
+        ctx.fillRect(w.x, yy, w.w, 1);
+      }
     });
 
     // Cofres (sprite pixel art)
@@ -311,7 +340,7 @@ const EXPLORE = (() => {
   }
 
   function playerColor() {
-    return ({ warrior:'#b83020', elf:'#4a9a3a', mage:'#6a4aaa', rogue:'#4a4a4a' })[state.classId] || '#c8963c';
+    return ({ warrior:'#b83020', elf:'#4a9a3a', mage:'#6a4aaa', rogue:'#4a4a4a', werewolf:'#7a4e24', demon:'#b82418' })[state.classId] || '#c8963c';
   }
 
   /* Dibuja al jugador como sprite de cuerpo completo con animación de

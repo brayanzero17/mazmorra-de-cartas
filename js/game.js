@@ -34,6 +34,10 @@ const state = {
   bag:    [],
   BAG_MAX: 5,
   currentEnemyRef: null, // referencia al enemigo de exploración en combate
+
+  // Hombre Lobo: daño acumulado recibido (rencor), hasta 3 golpes.
+  rencor: 0,
+  rencorHits: 0,
 };
 
 /* ──────────────────────────── Mochila: bonos ───────────────────────── */
@@ -159,6 +163,8 @@ function initGame(classId) {
   state.level     = 1;
   state.bag       = [];
   state.currentEnemyRef = null;
+  state.rencor      = 0;
+  state.rencorHits  = 0;
 
   clearLog();
   logMsg(`⚔️ ${state.playerName} el ${cls.name} entra en la mazmorra...`, 'info');
@@ -280,9 +286,26 @@ function applyCardEffect(card, r) {
   if (r.dmg != null) {
     let dmg = r.dmg + state.buff + bonusAttack();  // + bonus del arma equipada
     if (state.buff) { logMsg(`Bonus de furia: +${state.buff} daño`, 'special'); state.buff = 0; }
+    // Hombre Lobo: Zarpazo Vengador suma el rencor acumulado
+    if (r.useRencor) {
+      if (state.rencor > 0) {
+        dmg += state.rencor;
+        logMsg(`🐺 ¡Devuelves ${state.rencor} de rencor acumulado!`, 'special');
+      } else {
+        logMsg(`🐺 No tienes rencor acumulado todavía.`, 'info');
+      }
+      state.rencor = 0; state.rencorHits = 0;   // se descarga
+      if (typeof renderAll === 'function') renderAll();
+    }
     e.hp = Math.max(0, e.hp - dmg);
     logMsg(`${card.icon} ${card.name}: ${dmg} de daño a ${e.name}.`, 'damage');
     sfx('playerAttack'); sfx('hitEnemy');
+  }
+  // Demonio: Pacto Oscuro sacrifica vida propia
+  if (r.selfDmg) {
+    state.hp = Math.max(1, state.hp - r.selfDmg);  // no te mata a ti mismo (mín 1)
+    logMsg(`🔥 Sacrificas ${r.selfDmg} HP por el poder.`, 'damage');
+    if (typeof fxPlayerHit === 'function') fxPlayerHit();
   }
   if (r.heal != null) {
     const before = state.hp;
@@ -330,6 +353,13 @@ function enemyTurn() {
       state.hp = Math.max(0, state.hp - dmg);
       logMsg(`💢 ${e.name} te ataca por ${dmg} de daño.`, 'enemy-atk');
       if (dmg > 0) { sfx('playerHurt'); if (typeof fxEnemyAttack === 'function') fxEnemyAttack(); }
+
+      // Hombre Lobo: acumula el daño recibido como RENCOR (hasta 3 golpes)
+      if (state.classId === 'werewolf' && dmg > 0 && state.rencorHits < 3) {
+        state.rencor += dmg;
+        state.rencorHits += 1;
+        logMsg(`🐺 Rencor acumulado: ${state.rencor} (${state.rencorHits}/3 golpes).`, 'special');
+      }
     }
   }
 

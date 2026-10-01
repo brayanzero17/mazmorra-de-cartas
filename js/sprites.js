@@ -86,26 +86,26 @@ const SPRITES = {
     ]
   },
 
-  /* 👺 Orco Brutal — piel rojiza, colmillos, hombreras */
+  /* 👹 Orco Brutal — verdoso musculoso, mandíbula ancha, colmillos */
   orco: {
-    palette: { p:'#000', d:'#5a2410', r:'#8a3a1a', R:'#b8502a', L:'#d8703a', e:'#ffd020', w:'#f0e6d0', m:'#3a1a0a' },
+    palette: { p:'#000', d:'#2a4015', r:'#4a6a28', R:'#6a9a38', L:'#8aba4a', e:'#ff2810', w:'#f0e6d0', m:'#1a1a0a' },
     art: [
-      '..pp......pp....',
-      '.pRRp....pRRp...',
-      '.pRRRppppRRRp...',
-      'pRRRRRRRRRRRRp..',
-      'pRRLRRRRRRLRRp..',
-      'pRReRRRRRReRRp..',
-      'pRRRRRRRRRRRRp..',
-      'pRRRRmmmmRRRRp..',
-      'pRwRRRRRRRRwRp..',
-      'pRRwRRRRRRwRRp..',
-      '.pRRRRRRRRRRp...',
-      'ppRRRRRRRRRRpp..',
-      'pddpRRRRRRpddp..',
-      'pddp.pRRp.pddp..',
-      '.pp..pddp..pp...',
-      '.....pp.pp......',
+      '..p..........p..',
+      '.pRp........pRp.',
+      '.pRRpppppppppRp.',
+      '.pRRRRRRRRRRRRp.',
+      'pRRRLRRRRRRLRRRp',
+      'pRRReRRRRRReRRRp',
+      'pRRRRRRRRRRRRRRp',
+      'pRRRRRwwwwRRRRRp',
+      'pwRRRwmmmmwRRRwp',
+      'pwwRRmmmmmmRRwwp',
+      '.pwRRRmmmmRRRwp.',
+      '.pRRRRRRRRRRRRp.',
+      'pRRRRRRRRRRRRRRp',
+      'pddpRRRRRRRRpddp',
+      '.pp.pdddddddp.pp',
+      '....pp....pp....',
     ]
   },
 
@@ -229,6 +229,8 @@ const FACE_PALETTES = {
   elf:     { h:'#164a1a', H:'#2a7a2a', c:'#4ac84a', S:'#e8c8a0', s:'#c0986a', e:'#fff', p:'#163016', b:'#c81818', m:'#4a1010', d:'#0a2a0a' }, // capucha verde
   mage:    { h:'#241248', H:'#4a2a8a', c:'#8a4ad8', S:'#e0c8a0', s:'#b89868', e:'#a8e8ff', p:'#141432', b:'#c81818', m:'#4a1010', d:'#120a2a' }, // capucha morada
   rogue:   { h:'#141414', H:'#333333', c:'#5a5a5a', S:'#d8b890', s:'#a88860', e:'#f0d020', p:'#0a0a0a', b:'#c81818', m:'#4a1010', d:'#000000' }, // capucha negra
+  werewolf:{ h:'#3a2410', H:'#6a4418', c:'#8a5a2a', S:'#7a4e24', s:'#5a3418', e:'#ffd020', p:'#1a0f08', b:'#c81818', m:'#2a1808', d:'#1a0f08' }, // pelaje marrón
+  demon:   { h:'#5a0a06', H:'#9a1810', c:'#ff6010', S:'#b82418', s:'#8a1810', e:'#ffe020', p:'#1a0404', b:'#ffa020', m:'#2a0804', d:'#1a0404' }, // piel roja, cuernos
 };
 
 /* Caras 16x16 con capucha/yelmo sombreado y rostro con nariz.

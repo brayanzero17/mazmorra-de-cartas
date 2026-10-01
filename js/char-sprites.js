@@ -26,6 +26,14 @@ const CHAR_PALETTES = {
     o:'#000000', r:'#2a2a2a', R:'#3a3a3a', c:'#141414', S:'#d8b890', s:'#a88860',
     e:'#f0d020', g:'#9a9a9a', w:'#c0c0c0', f:'#f0d020', b:'#1a1a1a',
   },
+  werewolf: {
+    o:'#1a0f08', r:'#5a3a1a', R:'#7a4e24', c:'#3a2410', S:'#8a5a2a', s:'#6a4418',
+    e:'#ffd020', g:'#c0c0c0', w:'#d8d8e0', f:'#ff4020', b:'#2a1a0a',
+  },
+  demon: {
+    o:'#1a0404', r:'#8a1810', R:'#b82418', c:'#5a0a06', S:'#d84020', s:'#a82810',
+    e:'#ffe020', g:'#ffa020', w:'#2a2a2a', f:'#ff6010', b:'#2a0804',
+  },
 };
 
 /* ─── Cuerpo del jugador: 2 frames (piernas alternadas) ─────────────

@@ -37,6 +37,10 @@ const CLASSES = {
         diceReq:{type:'any'}, calc:(d)=>({heal:5+d}) },
       { id:'e5', name:'Tiro Perfecto', icon:'🎯', effect:'20 de daño (solo con dado = 6)', type:'attack',
         diceReq:{type:'eq',value:6}, calc:()=>({dmg:20}) },
+      { id:'e6', name:'Flecha Venenosa', icon:'🏹', effect:'5 daño + veneno (4/turno) (dado par)', type:'attack',
+        diceReq:{type:'even'}, calc:()=>({dmg:5, poison:4}) },
+      { id:'e7', name:'Salto Ágil', icon:'🤸', effect:'Esquiva + 4 de defensa (dado impar)', type:'defense',
+        diceReq:{type:'odd'}, calc:()=>({block:4, dodge:true}) },
     ]
   },
 
@@ -59,6 +63,10 @@ const CLASSES = {
         diceReq:{type:'even'}, calc:()=>({heal:8, buff:2}) },
       { id:'w5', name:'Furia Berserker', icon:'💢', effect:'Daño = dado × 4 (solo con dado = 6)', type:'attack',
         diceReq:{type:'eq',value:6}, calc:(d)=>({dmg:d*4}) },
+      { id:'w6', name:'Embestida', icon:'🐂', effect:'8 daño y +4 defensa (dado ≥ 4)', type:'attack',
+        diceReq:{type:'gte',value:4}, calc:()=>({dmg:8, block:4}) },
+      { id:'w7', name:'Segunda Ira', icon:'🔥', effect:'Cura 6 HP + daño = dado × 2', type:'attack',
+        diceReq:{type:'any'}, calc:(d)=>({dmg:d*2, heal:6}) },
     ]
   },
 
@@ -81,6 +89,10 @@ const CLASSES = {
         diceReq:{type:'any'}, calc:(d)=>({dmg:d+2, heal:d+2}) },
       { id:'m5', name:'Meteoro', icon:'☄️', effect:'25 de daño (solo con dado = 6)', type:'attack',
         diceReq:{type:'eq',value:6}, calc:()=>({dmg:25}) },
+      { id:'m6', name:'Escudo Arcano', icon:'🔮', effect:'Gana 6 + dado de defensa mágica', type:'defense',
+        diceReq:{type:'any'}, calc:(d)=>({block:6+d}) },
+      { id:'m7', name:'Tormenta Eléctrica', icon:'⚡', effect:'Daño = dado × 3 + congela (dado impar)', type:'attack',
+        diceReq:{type:'odd'}, calc:(d)=>({dmg:d*3, freeze:true}) },
     ]
   },
 
@@ -103,6 +115,65 @@ const CLASSES = {
         diceReq:{type:'odd'}, calc:(d)=>({block:6+d, dodge:true}) },
       { id:'r5', name:'Asesinato', icon:'☠️', effect:'18 daño (solo con dado = 1)', type:'attack',
         diceReq:{type:'eq',value:1}, calc:()=>({dmg:18}) },
+      { id:'r6', name:'Daga Doble', icon:'🔪', effect:'Daño = (dado + 3) × 2 (dado ≤ 3)', type:'attack',
+        diceReq:{type:'lte',value:3}, calc:(d)=>({dmg:(d+3)*2}) },
+      { id:'r7', name:'Humo', icon:'💨', effect:'Esquiva + el enemigo pierde el turno (par)', type:'defense',
+        diceReq:{type:'even'}, calc:()=>({dodge:true, freeze:true}) },
+    ]
+  },
+
+  /* ─── CLASE: HOMBRE LOBO ───────────────────────────────────────────
+     Mecánica RENCOR: cada vez que recibe daño, lo acumula (hasta 3
+     golpes). Su carta "Zarpazo Vengador" devuelve el rencor acumulado
+     + (dado × 2). Resistente, pensado para aguantar y contraatacar. */
+  werewolf: {
+    id: 'werewolf',
+    name: 'Hombre Lobo',
+    icon: '🐺',
+    style: 'Furia y venganza',
+    diceHint: 'Más fuerte si lo golpean',
+    desc: 'Acumula el daño recibido como rencor y lo devuelve multiplicado con su Zarpazo Vengador.',
+    maxHp: 115,
+    cards: [
+      { id:'l1', name:'Garra', icon:'🐾', effect:'Daño = 5 + dado', type:'attack',
+        diceReq:{type:'any'}, calc:(d)=>({dmg:5+d}) },
+      { id:'l2', name:'Zarpazo Vengador', icon:'🐺', effect:'Devuelve el rencor acumulado + dado × 2', type:'attack',
+        diceReq:{type:'any'}, calc:(d)=>({dmg:d*2, useRencor:true}) },
+      { id:'l3', name:'Aullido', icon:'🌙', effect:'Cura 8 HP y +3 daño próximo turno (par)', type:'heal',
+        diceReq:{type:'even'}, calc:()=>({heal:8, buff:3}) },
+      { id:'l4', name:'Piel Dura', icon:'🛡️', effect:'Gana 7 + dado de defensa', type:'defense',
+        diceReq:{type:'any'}, calc:(d)=>({block:7+d}) },
+      { id:'l5', name:'Mordisco Feroz', icon:'🦷', effect:'Daño = dado × 3 + te curas 4 (dado ≥ 4)', type:'attack',
+        diceReq:{type:'gte',value:4}, calc:(d)=>({dmg:d*3, heal:4}) },
+      { id:'l6', name:'Luna Llena', icon:'🌕', effect:'22 de daño salvaje (solo con dado = 6)', type:'attack',
+        diceReq:{type:'eq',value:6}, calc:()=>({dmg:22}) },
+    ]
+  },
+
+  /* ─── CLASE: DEMONIO ───────────────────────────────────────────────
+     Robavidas FRÁGIL: poca vida pero sus ataques lo curan. Alto riesgo:
+     "Pacto Oscuro" hace mucho daño pero sacrifica vida propia. */
+  demon: {
+    id: 'demon',
+    name: 'Demonio',
+    icon: '😈',
+    style: 'Robavidas frágil',
+    diceHint: 'Poca vida, mucho poder',
+    desc: 'Frágil pero drena la vida de sus enemigos. Alto riesgo y recompensa.',
+    maxHp: 60,
+    cards: [
+      { id:'d1', name:'Zarpa Infernal', icon:'👹', effect:'Daño = 4 + dado, te curas la mitad', type:'attack',
+        diceReq:{type:'any'}, calc:(d)=>({dmg:4+d, heal:Math.ceil((4+d)/2)}) },
+      { id:'d2', name:'Drenar Alma', icon:'🩸', effect:'Daño = dado × 2, te curas lo mismo', type:'attack',
+        diceReq:{type:'any'}, calc:(d)=>({dmg:d*2, heal:d*2}) },
+      { id:'d3', name:'Pacto Oscuro', icon:'🔥', effect:'30 daño pero pierdes 10 HP (dado ≥ 4)', type:'attack',
+        diceReq:{type:'gte',value:4}, calc:()=>({dmg:30, selfDmg:10}) },
+      { id:'d4', name:'Llamas del Abismo', icon:'🌋', effect:'Daño = dado × 3 + veneno (impar)', type:'attack',
+        diceReq:{type:'odd'}, calc:(d)=>({dmg:d*3, poison:5}) },
+      { id:'d5', name:'Escudo de Sangre', icon:'🛡️', effect:'Gana 5 + dado defensa y cura 4', type:'defense',
+        diceReq:{type:'any'}, calc:(d)=>({block:5+d, heal:4}) },
+      { id:'d6', name:'Condenación', icon:'☠️', effect:'35 daño demoníaco (solo con dado = 6)', type:'attack',
+        diceReq:{type:'eq',value:6}, calc:()=>({dmg:35}) },
     ]
   }
 
@@ -232,14 +303,32 @@ const ITEMS = {
                     forClass:'rogue', desc:'Reduce 4 de daño (evasión).', defense:4 },
   r_veneno:       { id:'r_veneno',      name:'Frasco de Veneno',     icon:'☠️', type:'relic',  slot:'relic',
                     forClass:'rogue', desc:'+2 daño y +1 al dado.', attack:2, diceBonus:1 },
+
+  /* HOMBRE LOBO — garras, pelaje, instinto */
+  l_garras:       { id:'l_garras',      name:'Garras de Acero',      icon:'🐾', type:'weapon', slot:'weapon',
+                    forClass:'werewolf', desc:'+5 daño a tus zarpazos.', attack:5 },
+  l_pelaje:       { id:'l_pelaje',      name:'Pelaje Grueso',        icon:'🧶', type:'armor',  slot:'armor',
+                    forClass:'werewolf', desc:'Reduce 5 de daño por golpe.', defense:5 },
+  l_colmillo:     { id:'l_colmillo',    name:'Colmillo Lunar',       icon:'🌙', type:'relic',  slot:'relic',
+                    forClass:'werewolf', desc:'+3 daño y +25 HP máximo.', attack:3, maxHpBonus:25 },
+
+  /* DEMONIO — cuernos, fuego, pactos */
+  dm_tridente:    { id:'dm_tridente',   name:'Tridente Infernal',    icon:'🔱', type:'weapon', slot:'weapon',
+                    forClass:'demon', desc:'+5 daño demoníaco.', attack:5 },
+  dm_cuernos:     { id:'dm_cuernos',    name:'Cuernos Malditos',     icon:'😈', type:'relic',  slot:'relic',
+                    forClass:'demon', desc:'+3 daño y +1 al dado.', attack:3, diceBonus:1 },
+  dm_coraza:      { id:'dm_coraza',     name:'Coraza de Hueso',      icon:'🦴', type:'armor',  slot:'armor',
+                    forClass:'demon', desc:'Reduce 4 de daño y +20 HP máx.', defense:4, maxHpBonus:20 },
 };
 
 /* Objetos temáticos por clase (para el loot filtrado). */
 const CLASS_ITEMS = {
-  warrior: ['w_mandoble', 'w_yelmo', 'w_estandarte'],
-  mage:    ['m_grimorio', 'm_orbe', 'm_tunica', 'm_varita'],
-  elf:     ['e_arco_largo', 'e_carcaj', 'e_manto'],
-  rogue:   ['r_dagas', 'r_capa', 'r_veneno'],
+  warrior:  ['w_mandoble', 'w_yelmo', 'w_estandarte'],
+  mage:     ['m_grimorio', 'm_orbe', 'm_tunica', 'm_varita'],
+  elf:      ['e_arco_largo', 'e_carcaj', 'e_manto'],
+  rogue:    ['r_dagas', 'r_capa', 'r_veneno'],
+  werewolf: ['l_garras', 'l_pelaje', 'l_colmillo'],
+  demon:    ['dm_tridente', 'dm_cuernos', 'dm_coraza'],
 };
 
 /* Botín posible por sala (índice = sala-1). Cada cofre saca uno al azar
