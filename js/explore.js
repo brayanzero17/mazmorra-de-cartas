@@ -126,7 +126,7 @@ const EXPLORE = (() => {
     }
     // Movilidad suave: la velocidad actual se acerca a la objetivo
     // (aceleración al arrancar, deslizamiento al soltar) → más fluido.
-    const accel = 0.25;
+    const accel = 0.35;   // respuesta un poco más ágil
     player.vx += (tvx - player.vx) * accel * dt;
     player.vy += (tvy - player.vy) * accel * dt;
 
@@ -359,17 +359,26 @@ const EXPLORE = (() => {
     // Si la clase tiene imagen externa (assets/), úsala en el mapa
     if (typeof getClassImage === 'function' && getClassImage(state.classId)) {
       const img = getClassImage(state.classId);
-      const isize = 54;
-      const bob2 = player.moving ? Math.sin(player.frame * 3) * 2 : 0; // leve rebote al caminar
-      ctx.imageSmoothingEnabled = false;
+      // Más grande y proporcional al mapa (antes 54 → ahora 72)
+      const isize = 72;
+      // Animación de caminar: rebote vertical + ligero balanceo (inclinación)
+      const walkBob  = player.moving ? Math.abs(Math.sin(player.frame * 2.5)) * 4 : 0;
+      const walkTilt = player.moving ? Math.sin(player.frame * 2.5) * 0.06 : 0;
       const flip = (player.dir === 'left');
+
+      // Sombra elíptica en el piso (se achica cuando "salta" al caminar)
+      ctx.fillStyle = 'rgba(0,0,0,.4)';
+      ctx.beginPath();
+      ctx.ellipse(px, py + isize*0.42, isize*0.26 - walkBob*0.5, isize*0.09, 0, 0, Math.PI*2);
+      ctx.fill();
+
+      ctx.imageSmoothingEnabled = false;
       ctx.save();
-      if (flip) {
-        ctx.translate(px, 0); ctx.scale(-1, 1);
-        ctx.drawImage(img, -isize/2, py - isize/2 + bob2, isize, isize);
-      } else {
-        ctx.drawImage(img, px - isize/2, py - isize/2 + bob2, isize, isize);
-      }
+      // Pivote en los "pies" del personaje para que el balanceo se vea natural
+      ctx.translate(px, py + isize*0.4 - walkBob);
+      ctx.rotate(walkTilt);
+      if (flip) ctx.scale(-1, 1);
+      ctx.drawImage(img, -isize/2, -isize*0.9, isize, isize);
       ctx.restore();
       return;
     }
