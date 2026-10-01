@@ -28,49 +28,116 @@ const state = {
   turnOver:    false,
   cardsPlayed: 0,    // cartas jugadas este turno (límite 1 por tirada)
 
-  // Inventario / equipo (objetos de los cofres)
-  equip:  { armor:null, weapon:null, relic:null }, // objeto equipado por ranura
-  bag:    [],        // consumibles recogidos (ids)
+  // ─── MOCHILA ───
+  // bag: objetos guardados (máx 5). Cada entrada: { itemId, equipped }
+  // Los equipables se EQUIPAN desde la mochila; los consumibles se USAN.
+  bag:    [],
+  BAG_MAX: 5,
   currentEnemyRef: null, // referencia al enemigo de exploración en combate
 };
 
-/* ──────────────────────────── Bonos de equipo ──────────────────────── */
-/* Suman los efectos de los objetos equipados. */
+/* ──────────────────────────── Mochila: bonos ───────────────────────── */
+/* Los bonos vienen de los objetos EQUIPADOS dentro de la mochila. */
+function equippedItems() {
+  return state.bag.filter(e => e.equipped).map(e => ITEMS[e.itemId]).filter(Boolean);
+}
 function equipBonus(kind) {
-  let total = 0;
-  Object.values(state.equip).forEach(it => { if (it && it[kind]) total += it[kind]; });
-  return total;
+  return equippedItems().reduce((sum, it) => sum + (it[kind] || 0), 0);
 }
 function bonusAttack()   { return equipBonus('attack'); }
 function bonusDefense()  { return equipBonus('defense'); }
 function bonusDice()     { return equipBonus('diceBonus'); }
 function bonusMaxHp()    { return equipBonus('maxHpBonus'); }
 
-/* Equipa un objeto (reemplaza el de su ranura) o usa un consumible. */
-function acquireItem(itemId) {
-  const it = ITEMS[itemId];
-  if (!it) return;
+/* Recalcula el HP máximo según los bonos de vida equipados. */
+function recalcMaxHp() {
+  const prevMax = state.maxHp;
+  state.maxHp = state.classData.maxHp + bonusMaxHp();
+  if (state.maxHp > prevMax) state.hp += (state.maxHp - prevMax); // ganar vida máx cura esa cantidad
+  state.hp = Math.min(state.hp, state.maxHp);
+}
 
-  if (it.type === 'consumable') {
-    // Se usan al instante (curan)
-    if (it.healFull) { state.hp = state.maxHp; }
-    else if (it.heal) { state.hp = Math.min(state.maxHp, state.hp + it.heal); }
-    logMsg(`${it.icon} Usaste ${it.name}.`, 'heal');
+/* ──────────────────────────── Mochila: acciones ────────────────────── */
+/* Intenta meter un objeto en la mochila.
+   - Si hay espacio → entra y se avisa a la UI.
+   - Si está llena → devuelve false para que la UI pregunte qué botar. */
+function bagIsFull() { return state.bag.length >= state.BAG_MAX; }
+
+function addToBag(itemId) {
+  if (bagIsFull()) return false;
+  state.bag.push({ itemId, equipped: false });
+  const it = ITEMS[itemId];
+  logMsg(`🎒 Recogiste ${it.icon} ${it.name}.`, 'special');
+  refreshInventoryUI();
+  return true;
+}
+
+/* Bota (descarta) un objeto de la mochila por índice. */
+function discardFromBag(index) {
+  const entry = state.bag[index];
+  if (!entry) return;
+  const it = ITEMS[entry.itemId];
+  state.bag.splice(index, 1);
+  logMsg(`🗑️ Botaste ${it.name}.`, 'info');
+  recalcMaxHp();
+  refreshInventoryUI();
+}
+
+/* Equipa o desequipa un objeto de la mochila (solo equipables).
+   Al equipar uno, desequipa el que ocupaba su misma ranura. */
+function toggleEquip(index) {
+  const entry = state.bag[index];
+  if (!entry) return;
+  const it = ITEMS[entry.itemId];
+  if (!it.slot) return; // consumible: no se equipa
+
+  if (entry.equipped) {
+    entry.equipped = false;
+    logMsg(`Guardaste ${it.name}.`, 'info');
   } else {
-    // Equipable: reemplaza la ranura
-    const prevMaxBonus = bonusMaxHp();
-    state.equip[it.slot] = it;
-    // Reajustar HP máximo si cambió el bonus de vida
-    const newMaxBonus = bonusMaxHp();
-    if (newMaxBonus !== prevMaxBonus) {
-      const diff = newMaxBonus - prevMaxBonus;
-      state.maxHp = state.classData.maxHp + newMaxBonus;
-      if (diff > 0) state.hp += diff; // ganar vida máx te da esa vida
-      state.hp = Math.min(state.hp, state.maxHp);
-    }
+    // Desequipar cualquier otro de la misma ranura
+    state.bag.forEach(e => { if (e.equipped && ITEMS[e.itemId].slot === it.slot) e.equipped = false; });
+    entry.equipped = true;
     logMsg(`${it.icon} Equipaste ${it.name}.`, 'special');
+    if (typeof sfx === 'function') sfx('special');
   }
-  if (typeof renderEquip === 'function') renderEquip();
+  recalcMaxHp();
+  refreshInventoryUI();
+}
+
+/* Usa un consumible de la mochila (pociones). El jugador decide cuándo. */
+function useConsumable(index) {
+  const entry = state.bag[index];
+  if (!entry) return;
+  const it = ITEMS[entry.itemId];
+  if (it.type !== 'consumable') return;
+
+  if (state.hp >= state.maxHp) {
+    logMsg('Ya tienes la vida al máximo.', 'info');
+    return;
+  }
+  const before = state.hp;
+  if (it.healFull) state.hp = state.maxHp;
+  else if (it.heal) state.hp = Math.min(state.maxHp, state.hp + it.heal);
+  logMsg(`${it.icon} Usaste ${it.name}: +${state.hp - before} HP.`, 'heal');
+  if (typeof sfx === 'function') sfx('heal');
+
+  state.bag.splice(index, 1); // se consume
+  refreshInventoryUI();
+}
+
+/* Refresca toda la UI que muestra inventario/HP (según la pantalla). */
+function refreshInventoryUI() {
+  if (typeof renderBag === 'function')          renderBag();
+  if (typeof renderExploreHUD === 'function')   renderExploreHUD();
+  if (typeof renderAll === 'function' && document.getElementById('screen-game').classList.contains('active')) renderAll();
+}
+
+/* Punto de entrada al recoger un cofre. Devuelve el itemId si la mochila
+   está llena (para que la UI muestre el diálogo de descartar). */
+function acquireItem(itemId) {
+  if (addToBag(itemId)) return null;   // entró bien
+  return itemId;                       // mochila llena → la UI decide
 }
 
 /* ──────────────────────────── Inicio de partida ────────────────────── */
@@ -90,7 +157,6 @@ function initGame(classId) {
   state.dodge     = false;
   state.room      = 1;
   state.level     = 1;
-  state.equip     = { armor:null, weapon:null, relic:null };
   state.bag       = [];
   state.currentEnemyRef = null;
 

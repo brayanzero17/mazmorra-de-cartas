@@ -20,7 +20,7 @@ const EXPLORE = (() => {
   let canvas, ctx;
   let raf = null, running = false;
 
-  const player = { x: 0, y: 0, r: 14, speed: 3.2, dir: 'down', frame: 0 };
+  const player = { x: 0, y: 0, r: 14, speed: 2.6, dir: 'down', frame: 0 };
   const keys = {};
   let walls = [];
   let enemies = [];
@@ -77,8 +77,8 @@ const EXPLORE = (() => {
       enemies.push({
         x: gx, y: Math.min(gy, H - TILE*2),
         r: isBoss ? 26 : 16, alive: true,
-        vx: (Math.random()<.5?-1:1) * (isBoss ? 0.8 : 1.3),
-        vy: (Math.random()<.5?-1:1) * (isBoss ? 0.8 : 1.3),
+        vx: (Math.random()<.5?-1:1) * (isBoss ? 0.7 : 1.0),
+        vy: (Math.random()<.5?-1:1) * (isBoss ? 0.7 : 1.0),
         spriteKey: eData.spriteKey, name: eData.name, roomNum, boss: isBoss,
       });
     }
@@ -106,8 +106,9 @@ const EXPLORE = (() => {
   function enemiesLeft() { return enemies.filter(e => e.alive).length; }
 
   /* ─── Update ────────────────────────────────────────────────────── */
-  function update() {
-    time++;
+  function update(dt) {
+    dt = dt || 1;
+    time += dt;
     let dx = 0, dy = 0;
     if (keys['arrowleft'] || keys['a']) dx -= 1;
     if (keys['arrowright']|| keys['d']) dx += 1;
@@ -118,17 +119,19 @@ const EXPLORE = (() => {
     if (dx || dy) {
       const len = Math.hypot(dx, dy) || 1;
       dx /= len; dy /= len;
-      const nx = player.x + dx * player.speed;
-      const ny = player.y + dy * player.speed;
+      // Movimiento escalado por dt → misma velocidad en todo equipo/sala
+      const nx = player.x + dx * player.speed * dt;
+      const ny = player.y + dy * player.speed * dt;
       if (!hitsWall(nx, player.y)) player.x = nx;
       if (!hitsWall(player.x, ny)) player.y = ny;
       player.dir = Math.abs(dx) > Math.abs(dy) ? (dx>0?'right':'left') : (dy>0?'down':'up');
-      player.frame += 0.2;
+      player.frame += 0.2 * dt;
     }
 
     enemies.forEach(e => {
       if (!e.alive) return;
-      const nx = e.x + e.vx, ny = e.y + e.vy;
+      // Enemigos también escalados por dt
+      const nx = e.x + e.vx * dt, ny = e.y + e.vy * dt;
       if (hitsWall(nx, e.y) || nx < TILE+e.r || nx > W-TILE-e.r) e.vx *= -1; else e.x = nx;
       if (hitsWall(e.x, ny) || ny < TILE+e.r || ny > H-TILE-e.r) e.vy *= -1; else e.y = ny;
       const d = Math.hypot(e.x - player.x, e.y - player.y);
@@ -239,10 +242,22 @@ const EXPLORE = (() => {
       for (let yy = w.y; yy < w.y + w.h; yy += 20) ctx.strokeRect(w.x+1, yy+1, w.w-2, 18);
     });
 
-    // Cofres
+    // Cofres (sprite pixel art)
     chests.forEach(c => {
-      ctx.font = '26px serif'; ctx.textAlign = 'center';
-      ctx.fillText(c.opened ? '📭' : '📦', c.x, c.y + 9);
+      const cv = (typeof makeChestSprite === 'function') ? makeChestSprite(c.opened) : null;
+      if (cv) {
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(cv, c.x - 20, c.y - 20, 40, 40);
+      } else {
+        ctx.font = '26px serif'; ctx.textAlign = 'center';
+        ctx.fillText(c.opened ? '📭' : '📦', c.x, c.y + 9);
+      }
+      // Destello sobre cofres cerrados
+      if (!c.opened) {
+        const tw = 0.5 + 0.5*Math.sin(time*0.1 + c.x);
+        ctx.fillStyle = `rgba(255,220,80,${0.4*tw})`;
+        ctx.fillRect(c.x - 1, c.y - 24, 2, 4);
+      }
     });
 
     // Enemigos
@@ -286,20 +301,33 @@ const EXPLORE = (() => {
   }
 
   /* ─── Bucle ─────────────────────────────────────────────────────── */
-  function loop() { if (!running) return; update(); draw(); raf = requestAnimationFrame(loop); }
-  function start() { running = true; if (!raf) loop(); }
-  function stop() { running = false; if (raf) { cancelAnimationFrame(raf); raf = null; } }
-
-  /* Reanuda el bucle de forma robusta tras volver del combate.
-     Cancela cualquier frame pendiente y arranca uno nuevo, y limpia
-     el estado de teclas para que el jugador no quede "trabado". */
-  function resume() {
-    if (raf) { cancelAnimationFrame(raf); raf = null; }
-    for (const k in keys) keys[k] = false;   // soltar teclas atascadas
+  /* Bucle basado en DELTA TIME: la velocidad es la misma en cualquier
+     equipo y en cualquier sala, sin importar los FPS del monitor.
+     'dt' es un factor donde 1.0 = velocidad de referencia a 60 FPS. */
+  let lastT = 0;
+  function loop(now) {
+    if (!running) return;
+    if (!lastT) lastT = now;
+    let dt = (now - lastT) / (1000 / 60);   // normalizado a 60fps
+    lastT = now;
+    // Cap de dt para evitar "saltos" tras una pausa (ej. volver de combate)
+    if (!dt || dt > 3) dt = 1;
+    update(dt);
+    draw();
+    raf = requestAnimationFrame(loop);
+  }
+  function start() {
+    if (raf) { cancelAnimationFrame(raf); raf = null; }   // evita loops duplicados
+    for (const k in keys) keys[k] = false;
     joy.dx = 0; joy.dy = 0;
     running = true;
-    loop();
+    lastT = 0;
+    raf = requestAnimationFrame(loop);
   }
+  function stop() { running = false; if (raf) { cancelAnimationFrame(raf); raf = null; } lastT = 0; }
+
+  /* Reanudar tras el combate = reiniciar el bucle de forma limpia. */
+  function resume() { start(); }
 
   /* ─── Joystick táctil ───────────────────────────────────────────── */
   const joy = { dx: 0, dy: 0 };

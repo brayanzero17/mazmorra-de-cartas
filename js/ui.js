@@ -246,7 +246,11 @@ function enterExploreScreen(roomNum) {
     EXPLORE.init(canvas);
     EXPLORE.onEncounter = (enemyRef) => startCombatFromEncounter(enemyRef);
     EXPLORE.onExit      = () => onRoomCleared();
-    EXPLORE.onPickup    = (itemId) => { acquireItem(itemId); renderExploreHUD(); };
+    EXPLORE.onPickup    = (itemId) => {
+      const overflow = acquireItem(itemId);        // null si entró; itemId si mochila llena
+      if (overflow) openFullBagDialog(overflow);   // preguntar qué botar
+      renderExploreHUD();
+    };
     // Joystick táctil
     const pad = document.getElementById('joystick');
     const stick = document.getElementById('joystick-stick');
@@ -279,19 +283,102 @@ function renderExploreHUD() {
     const th = roomTheme(state.room);
     rn.textContent = (th.boss ? '👑 ' : '🗺️ ') + th.name;
   }
-  renderEquip();
+  renderBagMini();
 }
 
-/* Muestra los objetos equipados (armor/weapon/relic). */
-function renderEquip() {
+/* ──────────────────────────── MOCHILA (UI) ─────────────────────────── */
+
+/* Mini-indicador de mochila en el HUD (muestra cuántos objetos / 5). */
+function renderBagMini() {
   const cont = document.getElementById('exp-equip');
   if (!cont) return;
-  const slots = ['weapon','armor','relic'];
-  const labels = { weapon:'⚔️', armor:'🛡️', relic:'💠' };
-  cont.innerHTML = slots.map(s => {
-    const it = state.equip[s];
-    return `<span class="equip-slot" title="${it ? it.name+': '+it.desc : 'Vacío'}">${it ? it.icon : labels[s]}</span>`;
+  const count = state.bag.length;
+  const slots = [];
+  for (let i = 0; i < state.BAG_MAX; i++) {
+    const entry = state.bag[i];
+    if (entry) {
+      const it = ITEMS[entry.itemId];
+      slots.push(`<span class="bag-mini-slot ${entry.equipped?'eq':''}" title="${it.name}">${it.icon}</span>`);
+    } else {
+      slots.push(`<span class="bag-mini-slot empty">·</span>`);
+    }
+  }
+  cont.innerHTML = `<button class="bag-btn" onclick="openBag()">🎒 ${count}/${state.BAG_MAX}</button>` + slots.join('');
+}
+
+/* Abre el panel grande de la mochila. */
+function openBag() {
+  renderBag();
+  document.getElementById('bag-modal').classList.remove('hidden');
+}
+function closeBag() {
+  document.getElementById('bag-modal').classList.add('hidden');
+}
+
+/* Dibuja el contenido de la mochila (objetos con descripción y acciones). */
+function renderBag() {
+  const list = document.getElementById('bag-list');
+  if (!list) return;
+  if (state.bag.length === 0) {
+    list.innerHTML = `<p class="bag-empty">La mochila está vacía. Abre cofres 📦 para encontrar objetos.</p>`;
+    return;
+  }
+  const typeLabel = { consumable:'Poción', weapon:'Arma', armor:'Armadura', relic:'Reliquia' };
+  list.innerHTML = state.bag.map((entry, i) => {
+    const it = ITEMS[entry.itemId];
+    const isConsumable = it.type === 'consumable';
+    const actionBtn = isConsumable
+      ? `<button class="bag-action use" onclick="bagUse(${i})">Usar</button>`
+      : `<button class="bag-action equip" onclick="bagEquip(${i})">${entry.equipped?'Quitar':'Equipar'}</button>`;
+    return `
+      <div class="bag-item ${entry.equipped?'equipped':''}">
+        <div class="bag-item-icon">${it.icon}</div>
+        <div class="bag-item-info">
+          <div class="bag-item-name">${it.name} ${entry.equipped?'<span class="eq-tag">EQUIPADO</span>':''}</div>
+          <div class="bag-item-type">${typeLabel[it.type]||''}</div>
+          <div class="bag-item-desc">${it.desc}</div>
+        </div>
+        <div class="bag-item-actions">
+          ${actionBtn}
+          <button class="bag-action drop" onclick="bagDrop(${i})">🗑️ Botar</button>
+        </div>
+      </div>`;
   }).join('');
+}
+
+function bagUse(i)   { useConsumable(i); renderBag(); }
+function bagEquip(i) { toggleEquip(i);   renderBag(); }
+function bagDrop(i)  { discardFromBag(i); renderBag(); }
+
+/* Diálogo cuando la mochila está llena: elegir qué botar o dejar el nuevo. */
+function openFullBagDialog(newItemId) {
+  const it = ITEMS[newItemId];
+  const modal = document.getElementById('fullbag-modal');
+  const body  = document.getElementById('fullbag-body');
+  body.innerHTML = `
+    <p class="fullbag-intro">Encontraste <b>${it.icon} ${it.name}</b><br><span class="fullbag-desc">${it.desc}</span></p>
+    <p class="fullbag-q">Tu mochila está llena (5/5). ¿Qué objeto botas para quedarte con el nuevo?</p>
+    <div class="fullbag-list">
+      ${state.bag.map((entry, i) => {
+        const old = ITEMS[entry.itemId];
+        return `<button class="fullbag-opt" onclick="fullBagSwap(${i}, '${newItemId}')">
+                  <span>${old.icon} ${old.name}</span>
+                  <small>${old.desc}</small>
+                </button>`;
+      }).join('')}
+    </div>
+    <button class="btn-primary fullbag-skip" onclick="fullBagSkip()">Dejar el nuevo (no tomarlo)</button>
+  `;
+  modal.classList.remove('hidden');
+}
+function fullBagSwap(index, newItemId) {
+  discardFromBag(index);
+  addToBag(newItemId);
+  document.getElementById('fullbag-modal').classList.add('hidden');
+}
+function fullBagSkip() {
+  document.getElementById('fullbag-modal').classList.add('hidden');
+  logMsg('Dejaste el objeto en el cofre.', 'info');
 }
 
 /* ──────────────────────────── Sonido ───────────────────────────────── */

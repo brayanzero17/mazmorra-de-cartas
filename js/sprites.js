@@ -36,100 +36,122 @@ function drawPixelArt(matrix, palette, scale = PIXEL_SCALE) {
 /* ═══════════════════════════ ENEMIGOS ═══════════════════════════════ */
 /* Matrices 12x12. Diseño simple pero reconocible, estilo retro.         */
 
+/* Matrices 16x16, con sombreado (tonos oscuro/medio/claro) para dar
+   volumen y un look más trabajado, estilo RPG oscuro. */
 const SPRITES = {
 
-  /* 👹 Goblin — verde, orejas puntudas */
+  /* 👹 Goblin — verde, orejas puntudas, taparrabos, ojos rojos */
   goblin: {
-    palette: { g:'#4a7a2a', G:'#6fae2f', d:'#2a4a15', e:'#e0e0e0', p:'#000', m:'#a83232' },
+    palette: { d:'#2a4a15', g:'#4a7a2a', G:'#6fae2f', L:'#8fd04a', e:'#ff3020', p:'#000', m:'#1a1a1a', b:'#5a3a1a' },
     art: [
-      '....gggg....',
-      '..gg.GG.gg..',
-      '.g.GGGGGG.g.',
-      '.gGGGGGGGGg.',
-      '.gGeGGGGeGg.',
-      '.gGpGGGGpGg.',
-      '.gGGGGGGGGg.',
-      '.gGGmmmmGGg.',
-      '.gGGpppGGGg.',
-      '..gGGGGGGg..',
-      '...dg..gd...',
-      '...d....d...',
+      '......pp........',
+      '.pp..pGGp...pp..',
+      'pGGp.pGGp..pGGp.',
+      'pGGGppGGGppGGGp.',
+      '.pGGGGGGGGGGGp..',
+      '.pGLGGGGGGGLGp..',
+      '.pGeGGGGGGeGGp..',
+      '.pGGGppppGGGGp..',
+      '.pGGpmmmmpGGGp..',
+      '..pGGGGGGGGGp...',
+      '...pGGGGGGGp....',
+      '..pbbpGGGpbbp...',
+      '..pbbp..pbbp....',
+      '...pp....pp.....',
+      '...p......p.....',
+      '..pp......pp....',
     ]
   },
 
-  /* 💀 Esqueleto — hueso, cuencas negras */
+  /* 💀 Esqueleto — cráneo con mandíbula, costillas, tono hueso */
   esqueleto: {
-    palette: { b:'#d8c8a8', B:'#f0e6d0', p:'#000', s:'#8a7a5a' },
+    palette: { p:'#000', s:'#8a7a5a', b:'#c8b890', B:'#f0e6d0', e:'#7fe0ff' },
     art: [
-      '...bBBBb....',
-      '..bBBBBBb...',
-      '.bBBBBBBBb..',
-      '.bBpBBBpBb..',
-      '.bBpBBBpBb..',
-      '.bBBBpBBBb..',
-      '.bBBpppBBb..',
-      '..bBBBBBb...',
-      '...bbbbb....',
-      '..b.b.b.b...',
-      '.b..b.b..b..',
-      '.s..s.s..s..',
+      '....pppppp......',
+      '...pBBBBBBp.....',
+      '..pBBBBBBBBp....',
+      '..pBBBBBBBBp....',
+      '..pBpeBBepBp....',
+      '..pBppBBppBp....',
+      '..pBBBppBBBp....',
+      '..pBBpppppBp....',
+      '...pBpBpBpBp....',
+      '....pppppp......',
+      '...pbBBBBbp.....',
+      '..pbpBpBpBbp....',
+      '..pbpBpBpBbp....',
+      '...ppBppBpp.....',
+      '....pb..bp......',
+      '...pp....pp.....',
     ]
   },
 
-  /* 👺 Orco Brutal — rojo, colmillos */
+  /* 👺 Orco Brutal — piel rojiza, colmillos, hombreras */
   orco: {
-    palette: { r:'#8a3a1a', R:'#b8502a', d:'#5a2410', e:'#f0d020', p:'#000', w:'#f0e6d0' },
+    palette: { p:'#000', d:'#5a2410', r:'#8a3a1a', R:'#b8502a', L:'#d8703a', e:'#ffd020', w:'#f0e6d0', m:'#3a1a0a' },
     art: [
-      '..rr.RR.rr..',
-      '.rRRRRRRRRr.',
-      'rRRRRRRRRRRr',
-      'rRReRRRReRRr',
-      'rRRpRRRRpRRr',
-      'rRRRRRRRRRRr',
-      'rRRRddddRRRr',
-      'rRwRRRRRRwRr',
-      '.rRRRRRRRRr.',
-      '..rRRRRRRr..',
-      '..d.rRRr.d..',
-      '....d..d....',
+      '..pp......pp....',
+      '.pRRp....pRRp...',
+      '.pRRRppppRRRp...',
+      'pRRRRRRRRRRRRp..',
+      'pRRLRRRRRRLRRp..',
+      'pRReRRRRRReRRp..',
+      'pRRRRRRRRRRRRp..',
+      'pRRRRmmmmRRRRp..',
+      'pRwRRRRRRRRwRp..',
+      'pRRwRRRRRRwRRp..',
+      '.pRRRRRRRRRRp...',
+      'ppRRRRRRRRRRpp..',
+      'pddpRRRRRRpddp..',
+      'pddp.pRRp.pddp..',
+      '.pp..pddp..pp...',
+      '.....pp.pp......',
     ]
   },
 
-  /* 🧟 Nigromante — encapuchado morado, ojos brillantes */
+  /* 🧙 Nigromante — encapuchado morado, ojos verdes brillantes, túnica */
   nigromante: {
-    palette: { m:'#3a1a5a', M:'#5a2a8a', e:'#a8e832', p:'#000', b:'#d8c8a8', s:'#7a3ab8' },
+    palette: { p:'#000', m:'#2a1248', M:'#3a1a5a', V:'#5a2a8a', L:'#7a3ab8', e:'#a8ff32', b:'#d8c8a8' },
     art: [
-      '...mMMMm....',
-      '..mMMMMMm...',
-      '.mMMMMMMMm..',
-      '.mMpppppMm..',
-      '.mMpeepeMm..',
-      '.mMpppppMm..',
-      '.mbMMMMMbm..',
-      'mMMMMMMMMMm.',
-      'mMMsMMMsMMm.',
-      'mMMMMMMMMMm.',
-      '.mMMMMMMMm..',
-      '..mM.MM.Mm..',
+      '......pp........',
+      '....ppMMpp......',
+      '...pMMMMMMp.....',
+      '..pMMMMMMMMp....',
+      '..pMVVVVVVMp....',
+      '..pMVppppVMp....',
+      '..pMpeVVepMp....',
+      '..pMVppppVMp....',
+      '..pMMVVVVMMp....',
+      '.pMMMMMMMMMMp...',
+      '.pMMMLLLLMMMp...',
+      'pMMMMMMMMMMMMp..',
+      'pMMMMVVVVMMMMp..',
+      'pMMMMMMMMMMMMp..',
+      '.pMMMMMMMMMMp...',
+      '..pp.pp.pp.pp...',
     ]
   },
 
-  /* 🐉 Dragón Ancestral — rojo/naranja, cuernos, fuego */
+  /* 🐉 Dragón Ancestral — gran reptil rojo, cuernos, alas, fuego */
   dragon: {
-    palette: { r:'#8a1a0a', R:'#c83a1a', o:'#f07020', e:'#f0d020', p:'#000', f:'#ffd000' },
+    palette: { p:'#000', d:'#5a0a04', r:'#8a1a0a', R:'#c83a1a', o:'#f07020', L:'#ff9040', e:'#ffe020', f:'#ffd000', w:'#3a0804' },
     art: [
-      'r..rRRRr..r.',
-      '.rrRRRRRRrr.',
-      '.RRRRRRRRRR.',
-      'RRReRRRReRRo',
-      'RRpRRRRpRRoo',
-      'RRRRRRRRRRRo',
-      '.RRRffffRRR.',
-      '.RRfffffRRo.',
-      'oRRRRRRRRRo.',
-      '.oRRRRRRRo..',
-      '..o.RRRR.o..',
-      '...o.RR.o...',
+      'p..pp......pp..p',
+      'pRppRRp..pRRppRp',
+      'pRRRRRRppRRRRRRp',
+      'wpRRRRRRRRRRRRpw',
+      'pRRRLRRRRRRLRRRp',
+      'pRReRRRRRRRReRRp',
+      'pRRRRRppppRRRRRp',
+      'pRRRRpffffpRRRRp',
+      'pRRRpffLLffpRRRp',
+      'pRRRRpffffpRRRRp',
+      'wpRRRRRRRRRRRRpw',
+      '.pRRRRRRRRRRRRp.',
+      '.pdRRRRRRRRRRdp.',
+      '..ppRRRpppRRpp..',
+      '...pdp.pp.pdp...',
+      '...pp......pp...',
     ]
   },
 
@@ -142,75 +164,147 @@ function makeEnemySprite(key) {
   return drawPixelArt(s.art, s.palette);
 }
 
+/* ═══════════════════════════ COFRES ═════════════════════════════════ */
+/* Cofre de madera con herrajes dorados. Dos estados: cerrado y abierto. */
+const CHEST = {
+  palette: {
+    p:'#000',       // contorno
+    w:'#5a3410',    // madera oscura
+    W:'#8a5420',    // madera clara
+    g:'#c89028',    // herraje dorado
+    G:'#f0c040',    // dorado brillante
+    l:'#2a1808',    // interior/sombra
+    s:'#ffe890',    // brillo del tesoro
+  },
+  closed: [
+    '................',
+    '....pppppppp....',
+    '...pGGGGGGGGp...',
+    '..pGWWWWWWWWGp..',
+    '..pWWWWWWWWWWp..',
+    '..pWWggggggWWp..',
+    '..pGGgGGGGgGGp..',
+    '..pWWggGGggWWp..',
+    '..pWWWWWWWWWWp..',
+    '..pWWWWWWWWWWp..',
+    '..pGGGGGGGGGGp..',
+    '...pppppppppp...',
+    '................',
+    '................',
+    '................',
+    '................',
+  ],
+  open: [
+    '..pppppppppp....',
+    '.plllllllllp....',
+    '.plsllllslllp...',
+    '.pllsllllsllp...',
+    '.plllssslllp....',
+    '..pppppppppp....',
+    '..pGGGGGGGGp....',
+    '..pWWWWWWWWp....',
+    '..pWWggggWWp....',
+    '..pGGgGGgGGp....',
+    '..pWWWWWWWWp....',
+    '..pGGGGGGGGp....',
+    '...pppppppp.....',
+    '................',
+    '................',
+    '................',
+  ],
+};
+
+/* Devuelve el canvas del cofre (abierto o cerrado). */
+function makeChestSprite(opened) {
+  return drawPixelArt(opened ? CHEST.open : CHEST.closed, CHEST.palette, 2.5);
+}
+
 /* ═══════════════════════════ CARA DOOM DEL JUGADOR ══════════════════ */
 /* Cambia de expresión según el % de vida (como el marine de DOOM).      */
 
-/* Paleta por clase: cambia el color del "casco/pelo" (h) y detalle (c). */
+/* Paleta por clase. h=capucha(oscuro) H=capucha(claro) c=borde/detalle
+   S=piel s=sombra piel e=ojo p=pupila/sombra b=sangre m=boca d=contorno */
 const FACE_PALETTES = {
-  warrior: { s:'#c88a5a', S:'#e0a878', h:'#7a1a10', c:'#b83020', e:'#fff', p:'#1a1a2a', b:'#8b0000', m:'#5a1a1a', d:'#3a2410' }, // casco rojo
-  elf:     { s:'#d0a878', S:'#e8c8a0', h:'#2a6a2a', c:'#4a9a3a', e:'#fff', p:'#1a3a1a', b:'#8b0000', m:'#5a1a1a', d:'#204018' }, // capucha verde
-  mage:    { s:'#c0a080', S:'#e0c8a0', h:'#3a2a6a', c:'#6a4aaa', e:'#a8e8ff', p:'#1a1a3a', b:'#8b0000', m:'#5a1a1a', d:'#241a4a' }, // capucha morada
-  rogue:   { s:'#b89a70', S:'#d8b890', h:'#2a2a2a', c:'#4a4a4a', e:'#f0d020', p:'#1a1a1a', b:'#8b0000', m:'#5a1a1a', d:'#101010' }, // capucha negra
+  warrior: { h:'#5a1208', H:'#8a2414', c:'#c83020', S:'#e0a878', s:'#b07048', e:'#fff', p:'#1a1a2a', b:'#c81818', m:'#4a1010', d:'#2a0a04' }, // yelmo rojo
+  elf:     { h:'#164a1a', H:'#2a7a2a', c:'#4ac84a', S:'#e8c8a0', s:'#c0986a', e:'#fff', p:'#163016', b:'#c81818', m:'#4a1010', d:'#0a2a0a' }, // capucha verde
+  mage:    { h:'#241248', H:'#4a2a8a', c:'#8a4ad8', S:'#e0c8a0', s:'#b89868', e:'#a8e8ff', p:'#141432', b:'#c81818', m:'#4a1010', d:'#120a2a' }, // capucha morada
+  rogue:   { h:'#141414', H:'#333333', c:'#5a5a5a', S:'#d8b890', s:'#a88860', e:'#f0d020', p:'#0a0a0a', b:'#c81818', m:'#4a1010', d:'#000000' }, // capucha negra
 };
 
-/* Expresiones base (12x12). 'h' = casco/pelo (color según clase),
-   'c' = detalle del casco. De sano a casi muerto. */
+/* Caras 16x16 con capucha/yelmo sombreado y rostro con nariz.
+   h=sombra capucha H=luz capucha c=borde. De sano a casi muerto. */
 const FACES = {
-  ok: [                         // 75-100%: serio y firme
-    '..hhcchh....',
-    '.hccccccch..',
-    '.hSSSSSSSSh.',
-    '.hSeSpSpSeS.',
-    '.hSSSSSSSSh.',
-    '.hSSSbbSSSh.',
-    '.hSShhhhSSh.',
-    '.hSSmmmmSSh.',
-    '.hSSSSSSSSh.',
-    '..hSSSSSSh..',
-    '...dhhhhd...',
-    '............',
+  ok: [                         // 75-100%: firme
+    '....hHHHHh......',
+    '..hhHHHHHHhh....',
+    '.hHHHHHHHHHHh...',
+    '.hHHccccccHHh...',
+    '.hHcSSSSSScHh...',
+    '.hHcSSSSSScHh...',
+    '.hcSeSSSSeSch...',
+    '.hcSpSSSSpSch...',
+    '.hcSSSssSSSch...',
+    '.hcSSSssSSSch...',
+    '.hcSSmmmmSSch...',
+    '.hHcSSSSSScHh...',
+    '..hHcccccHHh....',
+    '...hHHHHHHh.....',
+    '....dHHHHd......',
+    '.....dddd.......',
   ],
-  hurt: [                       // 40-74%: apretando dientes, un corte
-    '..hhcchh....',
-    '.hccccccch..',
-    '.hSSbSSSSSh.',
-    '.hSpSSpSSeS.',
-    '.hSSSSSSSSh.',
-    '.hSSSbbSSSh.',
-    '.hSmmmmmmSh.',
-    '.hSeeeeeeSh.',
-    '.hSSmmmmSSh.',
-    '..hSSSSSSh..',
-    '...dhhhhd...',
-    '............',
+  hurt: [                       // 40-74%: herido leve
+    '....hHHHHh......',
+    '..hhHHHHHHhh....',
+    '.hHHHHHHHHHHh...',
+    '.hHHccccccHHh...',
+    '.hHcSbSSSScHh...',
+    '.hHcSSSSSScHh...',
+    '.hcSeSSSSeSch...',
+    '.hcSpSSSSpSch...',
+    '.hcSSSssSSSch...',
+    '.hcSmmmmmmSch...',
+    '.hcSeeeeeeSch...',
+    '.hHcSbSSSScHh...',
+    '..hHcccccHHh....',
+    '...hHHHHHHh.....',
+    '....dHHHHd......',
+    '.....dddd.......',
   ],
-  bad: [                        // 15-39%: herido, sangre en la cara
-    '..hhcchh....',
-    '.hccccccch..',
-    '.hSSbSSbSSh.',
-    '.hSpSSpSSpS.',
-    '.hSSbSSbSSh.',
-    '.hSbSbbSbSh.',
-    '.hmmmmmmmmh.',
-    '.heeeeeeeeh.',
-    '.hSbmmmmbSh.',
-    '..hSbSSbSh..',
-    '...dhhhhd...',
-    '............',
+  bad: [                        // 15-39%: malherido, sangre
+    '....hHHHHh......',
+    '..hhHHHHHHhh....',
+    '.hHHHHHHHHHHh...',
+    '.hHHccccccHHh...',
+    '.hHcSbSSbScHh...',
+    '.hHcbSSSSbcHh...',
+    '.hcSeSSSSeSch...',
+    '.hcSpSbbSpSch...',
+    '.hcSbSssSbSch...',
+    '.hcmmmmmmmmch...',
+    '.hceeeeeeeech...',
+    '.hHcbSbbSbcHh...',
+    '..hHcccccHHh....',
+    '...hHbbbHHh.....',
+    '....dHHHHd......',
+    '.....dddd.......',
   ],
   dead: [                       // 0-14%: casi muerto, ojos en X
-    '..hhcchh....',
-    '.hccccccch..',
-    '.hbbSSSSbbh.',
-    '.hSbSbbSbSh.',
-    '.hSpSbbSpSh.',
-    '.hbSbbbbSbh.',
-    '.hmmmmmmmmh.',
-    '.hbeeeeeebh.',
-    '.hbbmmmmbbh.',
-    '..hbbSSbbh..',
-    '...dhhhhd...',
-    '............',
+    '....hHHHHh......',
+    '..hhHHHHHHhh....',
+    '.hHHHHHHHHHHh...',
+    '.hHHccccccHHh...',
+    '.hHcbSbbSbcHh...',
+    '.hHcSbSSbScHh...',
+    '.hcSbSbbSbsch...',
+    '.hcSpSbbSpSch...',
+    '.hcbSbssbSbch...',
+    '.hcmmmmmmmmch...',
+    '.hcbeeeeeebch...',
+    '.hHcbbSSbbcHh...',
+    '..hHcccccHHh....',
+    '...hHbbbbHh.....',
+    '....dHHHHd......',
+    '.....dddd.......',
   ],
 };
 

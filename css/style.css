@@ -722,3 +722,99 @@ input[type="text"]::placeholder { color: var(--text-dim); }
 @media (max-width: 760px), (pointer: coarse) {
   .joystick { display: block; }
 }
+
+/* ──────────────────────────── MOCHILA / MODALES ───────────────────── */
+.modal {
+  position: fixed; inset: 0; z-index: 200;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,.8);
+  animation: fadeIn .15s ease;
+}
+.modal-card {
+  background: linear-gradient(180deg, var(--bg-panel-2), var(--bg-panel));
+  border: 4px solid var(--rust);
+  box-shadow: inset 0 0 0 3px #000, 0 8px 30px #000;
+  max-width: 92vw;
+  width: 480px;
+  max-height: 86vh;
+  overflow-y: auto;
+}
+.modal-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1rem 1.2rem;
+  border-bottom: 3px solid var(--blood);
+  position: sticky; top: 0;
+  background: var(--bg-panel-2);
+}
+.modal-head h3 {
+  font-family: 'Press Start 2P', monospace;
+  color: var(--amber); font-size: .9rem; text-shadow: 2px 2px 0 #000;
+}
+.modal-close {
+  background: var(--blood); border: 2px solid #000; color: #fff;
+  cursor: pointer; font-size: 1rem; padding: .2rem .6rem;
+}
+.modal-close:hover { background: var(--blood-light); }
+
+/* Botón de mochila en el HUD */
+.bag-btn {
+  background: #000; border: 2px solid var(--amber); color: var(--amber);
+  cursor: pointer; font-family: 'VT323', monospace; font-size: 1.2rem;
+  padding: .2rem .55rem;
+}
+.bag-btn:hover { background: var(--rust); color: #fff; }
+
+/* Mini-slots de mochila en el HUD de exploración */
+.bag-mini-slot {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px;
+  background: #000; border: 2px solid var(--steel);
+  font-size: 1rem; margin-left: 2px;
+}
+.bag-mini-slot.eq    { border-color: var(--toxic); box-shadow: 0 0 6px var(--toxic); }
+.bag-mini-slot.empty { color: var(--text-dim); }
+
+/* Lista de objetos de la mochila */
+.bag-list { padding: 1rem; display: flex; flex-direction: column; gap: .7rem; }
+.bag-empty { color: var(--text-dim); text-align: center; font-size: 1.2rem; padding: 1.5rem; }
+
+.bag-item {
+  display: flex; align-items: center; gap: .8rem;
+  background: #000; border: 2px solid var(--steel);
+  padding: .6rem .7rem;
+}
+.bag-item.equipped { border-color: var(--toxic); box-shadow: inset 0 0 0 1px var(--toxic); }
+.bag-item-icon { font-size: 1.8rem; flex-shrink: 0; }
+.bag-item-info { flex: 1; min-width: 0; }
+.bag-item-name { color: var(--bone); font-size: 1.15rem; }
+.eq-tag {
+  background: var(--toxic); color: #000; font-size: .7rem;
+  padding: 0 .3rem; margin-left: .3rem; font-family: 'VT323', monospace;
+}
+.bag-item-type { color: var(--amber); font-size: .95rem; }
+.bag-item-desc { color: var(--text-dim); font-size: 1rem; line-height: 1.2; }
+.bag-item-actions { display: flex; flex-direction: column; gap: .3rem; flex-shrink: 0; }
+.bag-action {
+  cursor: pointer; border: 2px solid #000; font-family: 'VT323', monospace;
+  font-size: 1rem; padding: .25rem .5rem; white-space: nowrap;
+}
+.bag-action.use   { background: var(--toxic); color: #000; }
+.bag-action.equip { background: var(--amber); color: #000; }
+.bag-action.drop  { background: #3a1010; color: var(--blood-light); }
+.bag-action:hover { filter: brightness(1.2); }
+
+/* Diálogo de mochila llena */
+.fullbag-intro { color: var(--bone); text-align: center; font-size: 1.25rem; padding: 1rem 1rem 0; }
+.fullbag-desc  { color: var(--text-dim); font-size: 1.05rem; }
+.fullbag-q     { color: var(--amber); text-align: center; font-size: 1.1rem; padding: .6rem 1rem; }
+.fullbag-list  { display: flex; flex-direction: column; gap: .4rem; padding: 0 1rem; }
+.fullbag-opt {
+  display: flex; flex-direction: column; align-items: flex-start;
+  background: #000; border: 2px solid var(--steel); color: var(--text);
+  cursor: pointer; padding: .5rem .7rem; text-align: left;
+  font-family: 'VT323', monospace;
+}
+.fullbag-opt:hover { border-color: var(--blood-light); background: #1a0a0a; }
+.fullbag-opt span  { color: var(--bone); font-size: 1.15rem; }
+.fullbag-opt small { color: var(--text-dim); font-size: .95rem; }
+.fullbag-skip { margin: 1rem; width: calc(100% - 2rem); }

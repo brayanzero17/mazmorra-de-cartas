@@ -12,6 +12,25 @@
   <!-- Flash rojo de daño en pantalla (estilo DOOM) -->
   <div id="dmg-flash"></div>
 
+  <!-- ═══ MODAL: MOCHILA ═══ -->
+  <div id="bag-modal" class="modal hidden">
+    <div class="modal-card bag-card">
+      <div class="modal-head">
+        <h3>🎒 Mochila</h3>
+        <button class="modal-close" onclick="closeBag()">✕</button>
+      </div>
+      <div id="bag-list" class="bag-list"></div>
+    </div>
+  </div>
+
+  <!-- ═══ MODAL: MOCHILA LLENA ═══ -->
+  <div id="fullbag-modal" class="modal hidden">
+    <div class="modal-card">
+      <div class="modal-head"><h3>🎒 ¡Mochila llena!</h3></div>
+      <div id="fullbag-body"></div>
+    </div>
+  </div>
+
   <!-- ═══════════════════════════════════════════ PANTALLA LOGIN ═══ -->
   <div id="screen-login" class="screen active">
     <div class="login-bg">
@@ -94,6 +113,7 @@
           <span>⭐ Nivel</span>
           <span id="txt-level" class="stat-value">1</span>
         </div>
+        <button class="bag-btn" onclick="openBag()" title="Abrir mochila">🎒</button>
         <button id="btn-sound" class="btn-sound" onclick="toggleSound()" title="Activar/silenciar sonido">🔊</button>
       </div>
     </div>
