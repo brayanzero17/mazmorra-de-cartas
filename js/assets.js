@@ -35,13 +35,15 @@ function removeWhiteBackground(img) {
     const px = data.data;
     const W = cv.width, H = cv.height;
 
-    // Un píxel es "fondo" si YA es transparente, o si es casi blanco/gris
-    // claro (fondo sólido o patrón de tablero pegado a la imagen).
+    // Un píxel es "fondo" si YA es transparente, o si es un gris/blanco
+    // sin color (fondo sólido o patrón de tablero de transparencia pegado).
+    // Como solo borramos lo CONECTADO al borde (flood fill), podemos ser
+    // más permisivos con el gris sin dañar al personaje.
     const isBg = (r, g, b, a) => {
       if (a < 24) return true;                 // ya transparente
       const mn = Math.min(r,g,b), mx = Math.max(r,g,b);
-      const grayish = (mx - mn) < 24;          // sin color
-      return grayish && mn > 200;              // claro (blanco/gris claro)
+      const grayish = (mx - mn) < 28;          // sin color (gris/blanco)
+      return grayish && mn >= 150;             // gris medio-claro a blanco
     };
 
     // Flood fill desde los bordes: sólo se vuelve transparente el fondo
@@ -66,6 +68,32 @@ function removeWhiteBackground(img) {
       if (y-1 >= 0) stack.push(idx-W);
     }
 
+    // Pasada de limpieza: quita píxeles grises/blancos que quedaron
+    // "sueltos" rodeados mayormente de transparencia (restos del tablero
+    // que el flood fill no alcanzó por el patrón alternado). 2 pasadas.
+    for (let pass = 0; pass < 2; pass++) {
+      for (let y = 0; y < H; y++) {
+        for (let x = 0; x < W; x++) {
+          const idx = y*W + x, p = idx*4;
+          if (px[p+3] === 0) continue;
+          const mn = Math.min(px[p],px[p+1],px[p+2]);
+          const mx = Math.max(px[p],px[p+1],px[p+2]);
+          if ((mx - mn) < 28 && mn >= 150) {   // es gris/blanco
+            // ¿muchos vecinos transparentes? → también es fondo
+            let transp = 0, tot = 0;
+            for (let dy=-1; dy<=1; dy++) for (let dx=-1; dx<=1; dx++) {
+              if (!dx && !dy) continue;
+              const nx=x+dx, ny=y+dy;
+              if (nx<0||ny<0||nx>=W||ny>=H) continue;
+              tot++;
+              if (px[(ny*W+nx)*4+3] === 0) transp++;
+            }
+            if (tot && transp/tot >= 0.4) px[p+3] = 0;
+          }
+        }
+      }
+    }
+
     ctx.putImageData(data, 0, 0);
   } catch (e) {
     console.warn('No se pudo procesar el fondo:', e);
@@ -85,7 +113,7 @@ function preloadClassImages() {
         resolve();
       };
       img.onerror = () => { resolve(); };  // no existe → se queda sin imagen
-      img.src = src + '?v=9';
+      img.src = src + '?v=10';
     });
   });
   return Promise.all(jobs);
