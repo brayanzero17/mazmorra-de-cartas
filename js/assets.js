@@ -35,46 +35,35 @@ function removeWhiteBackground(img) {
     const px = data.data;
     const W = cv.width, H = cv.height;
 
-    // Detecta si es un patrón de "tablero de transparencia" (cuadritos
-    // grises/blancos alternados que quedaron pegados en la imagen).
-    const isCheckerBg = (r, g, b) => {
-      // gris (claro u oscuro) sin saturación: cuadritos del tablero o
-      // recuadro gris que a veces queda alrededor de la imagen.
+    // Un píxel es "fondo" si YA es transparente, o si es casi blanco/gris
+    // claro (fondo sólido o patrón de tablero pegado a la imagen).
+    const isBg = (r, g, b, a) => {
+      if (a < 24) return true;                 // ya transparente
       const mn = Math.min(r,g,b), mx = Math.max(r,g,b);
-      const grayish = (mx - mn) < 22;        // casi sin color
-      return grayish && mn > 120;            // gris medio-claro hacia blanco
+      const grayish = (mx - mn) < 24;          // sin color
+      return grayish && mn > 200;              // claro (blanco/gris claro)
     };
 
-    // 1) Volver transparente blanco/gris-claro del fondo
-    for (let i = 0; i < px.length; i += 4) {
-      const r = px[i], g = px[i+1], b = px[i+2];
-      if (isCheckerBg(r, g, b)) px[i+3] = 0;
-    }
-
-    // 2) Flood fill desde los bordes para no borrar grises DENTRO del
-    //    personaje (p.ej. armadura clara). Sólo quitamos el fondo conectado
-    //    a los bordes. Reconstruimos alpha: parte del borde y propaga.
+    // Flood fill desde los bordes: sólo se vuelve transparente el fondo
+    // CONECTADO al borde. Así no borramos zonas claras internas del
+    // personaje (armadura, báculo claro, etc.). NO tocamos el resto.
     const visited = new Uint8Array(W * H);
     const stack = [];
-    // Sembrar desde todos los píxeles del borde que sean fondo
-    for (let x = 0; x < W; x++) { stack.push([x,0]); stack.push([x,H-1]); }
-    for (let y = 0; y < H; y++) { stack.push([0,y]); stack.push([W-1,y]); }
-
-    // Primero restauramos alpha (el paso 1 fue demasiado agresivo con grises internos)
-    // Reasignamos: todo opaco, y el flood fill marca el fondo real.
-    for (let i = 3; i < px.length; i += 4) px[i] = 255;
+    for (let x = 0; x < W; x++) { stack.push(x); stack.push((H-1)*W + x); }
+    for (let y = 0; y < H; y++) { stack.push(y*W); stack.push(y*W + (W-1)); }
 
     while (stack.length) {
-      const [x, y] = stack.pop();
-      if (x < 0 || y < 0 || x >= W || y >= H) continue;
-      const idx = y * W + x;
-      if (visited[idx]) continue;
+      const idx = stack.pop();
+      if (idx < 0 || idx >= W*H || visited[idx]) continue;
       const p = idx * 4;
-      const r = px[p], g = px[p+1], b = px[p+2];
-      if (!isCheckerBg(r, g, b)) continue;   // sólo propaga por el fondo
+      if (!isBg(px[p], px[p+1], px[p+2], px[p+3])) continue;
       visited[idx] = 1;
-      px[p+3] = 0;                           // transparente
-      stack.push([x+1,y],[x-1,y],[x,y+1],[x,y-1]);
+      px[p+3] = 0;                             // transparente
+      const x = idx % W, y = (idx / W) | 0;
+      if (x+1 < W) stack.push(idx+1);
+      if (x-1 >= 0) stack.push(idx-1);
+      if (y+1 < H) stack.push(idx+W);
+      if (y-1 >= 0) stack.push(idx-W);
     }
 
     ctx.putImageData(data, 0, 0);
@@ -96,7 +85,7 @@ function preloadClassImages() {
         resolve();
       };
       img.onerror = () => { resolve(); };  // no existe → se queda sin imagen
-      img.src = src + '?v=8';
+      img.src = src + '?v=9';
     });
   });
   return Promise.all(jobs);
