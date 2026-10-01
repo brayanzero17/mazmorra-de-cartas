@@ -74,12 +74,16 @@ function renderAll() {
 function renderHUD() {
   const hpPct = Math.max(0, (state.hp / state.maxHp) * 100);
 
-  // Cara DOOM del jugador: canvas pixel art que cambia con la vida.
+  // Retrato del jugador: imagen de clase si existe, si no la cara pixel art.
   const avatar = document.getElementById('hud-avatar');
-  if (typeof makePlayerFace === 'function') {
-    const face = makePlayerFace(hpPct, state.classId);
-    avatar.innerHTML = '';
-    avatar.appendChild(face);
+  avatar.innerHTML = '';
+  if (typeof getClassImage === 'function' && getClassImage(state.classId)) {
+    const img = document.createElement('img');
+    img.src = getClassImage(state.classId).toDataURL();
+    img.className = 'hud-portrait-img';
+    avatar.appendChild(img);
+  } else if (typeof makePlayerFace === 'function') {
+    avatar.appendChild(makePlayerFace(hpPct, state.classId));
   } else {
     avatar.textContent = state.classData.icon; // fallback
   }
@@ -291,8 +295,13 @@ function renderExploreHUD() {
   const hpPct = Math.max(0, (state.hp / state.maxHp) * 100);
 
   const avatar = document.getElementById('exp-avatar');
-  if (typeof makePlayerFace === 'function') {
-    avatar.innerHTML = '';
+  avatar.innerHTML = '';
+  if (typeof getClassImage === 'function' && getClassImage(state.classId)) {
+    const img = document.createElement('img');
+    img.src = getClassImage(state.classId).toDataURL();
+    img.className = 'hud-portrait-img';
+    avatar.appendChild(img);
+  } else if (typeof makePlayerFace === 'function') {
     avatar.appendChild(makePlayerFace(hpPct, state.classId));
   }
   document.getElementById('exp-name').textContent       = state.playerName;

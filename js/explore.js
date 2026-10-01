@@ -326,6 +326,21 @@ const EXPLORE = (() => {
     // Jugador: sprite de cuerpo completo con animación de caminar
     drawPlayer();
 
+    // Atmósfera: viñeta oscura en los bordes + halo de luz cálida en el
+    // jugador (como si llevara una antorcha). Da profundidad al mapa.
+    const vig = ctx.createRadialGradient(player.x, player.y, 30, player.x, player.y, W*0.6);
+    vig.addColorStop(0, 'rgba(0,0,0,0)');
+    vig.addColorStop(0.6, 'rgba(0,0,0,0.15)');
+    vig.addColorStop(1, 'rgba(0,0,0,0.55)');
+    ctx.fillStyle = vig;
+    ctx.fillRect(0, 0, W, H);
+
+    const glow = ctx.createRadialGradient(player.x, player.y, 10, player.x, player.y, 110);
+    glow.addColorStop(0, 'rgba(255,180,80,0.10)');
+    glow.addColorStop(1, 'rgba(255,180,80,0)');
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, W, H);
+
     // Mensaje flotante
     if (messageTimer > 0 && message) {
       ctx.font = '18px monospace'; ctx.textAlign = 'center';
@@ -349,12 +364,6 @@ const EXPLORE = (() => {
   function drawPlayer() {
     const size = 42;
     const px = player.x, py = player.y;
-
-    // Sombra elíptica bajo el personaje
-    ctx.fillStyle = 'rgba(0,0,0,.35)';
-    ctx.beginPath();
-    ctx.ellipse(px, py + size/2 - 4, size*0.28, size*0.12, 0, 0, Math.PI*2);
-    ctx.fill();
 
     // Si la clase tiene imagen externa (assets/), úsala en el mapa
     if (typeof getClassImage === 'function' && getClassImage(state.classId)) {
@@ -382,6 +391,12 @@ const EXPLORE = (() => {
       ctx.restore();
       return;
     }
+
+    // Sombra para el personaje pixel art (fallback)
+    ctx.fillStyle = 'rgba(0,0,0,.35)';
+    ctx.beginPath();
+    ctx.ellipse(px, py + size/2 - 4, size*0.28, size*0.12, 0, 0, Math.PI*2);
+    ctx.fill();
 
     let cv = null;
     if (typeof makeCharSprite === 'function') {
