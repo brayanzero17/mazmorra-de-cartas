@@ -399,6 +399,77 @@ const EXPLORE = (() => {
     return ({ warrior:'#b83020', elf:'#4a9a3a', mage:'#6a4aaa', rogue:'#4a4a4a', werewolf:'#7a4e24', demon:'#b82418' })[state.classId] || '#c8963c';
   }
 
+  /* ─── Animación de caminar simulada (estilo Undertale) ──────────────
+     Como la imagen es una sola pose, dividimos el personaje en TORSO
+     (parte superior) y PIERNAS (parte inferior) y animamos cada mitad:
+       · Piernas: se inclinan a los lados alternando → simula pasos.
+       · Torso: rebota ligeramente arriba/abajo.
+     Al estar quieto, respira (bob muy suave). Gira con flip izq/der. */
+  function drawAnimatedCharacter(img, px, py) {
+    const isize = 76;
+    const iw = img.width, ih = img.height;
+    const legsFrac = 0.42;                     // 42% inferior = piernas
+    const splitY = ih * (1 - legsFrac);
+    const flip = (player.dir === 'left');
+    const faceAway = (player.dir === 'up');    // mirando hacia arriba
+
+    // Fase de la caminata
+    const t = player.frame * 2.6;
+    const walking = player.moving;
+    const bob   = walking ? Math.abs(Math.sin(t)) * 3.5 : Math.sin(time*0.04)*1.0; // rebote / respiración
+    const swing = walking ? Math.sin(t) : 0;                                        // vaivén piernas
+    const lean  = walking ? Math.sin(t) * 0.04 : 0;                                 // leve inclinación torso
+
+    const dstW = isize, dstH = isize * (ih/iw);
+    const footY = py + dstH*0.46;              // base (pies) en el piso
+
+    // Sombra en el piso (se achica al "saltar")
+    ctx.fillStyle = 'rgba(0,0,0,.4)';
+    ctx.beginPath();
+    ctx.ellipse(px, footY - 2, isize*0.26 - bob*0.4, isize*0.08, 0, 0, Math.PI*2);
+    ctx.fill();
+
+    ctx.imageSmoothingEnabled = false;
+    const legsH   = dstH * legsFrac;
+    const torsoH  = dstH * (1 - legsFrac);
+    const topY    = footY - dstH;              // y donde empieza el torso
+
+    ctx.save();
+    if (flip) { ctx.translate(px*2, 0); ctx.scale(-1, 1); }
+
+    // 1) PIERNAS (mitad inferior) con balanceo lateral alternado
+    ctx.save();
+    // pivote en la cadera para que las piernas "pivoteen" como al caminar
+    const hipX = px, hipY = footY - legsH;
+    ctx.translate(hipX, hipY);
+    ctx.rotate(swing * 0.10);
+    ctx.drawImage(
+      img, 0, splitY, iw, ih - splitY,                 // fuente: piernas
+      -dstW/2, 0, dstW, legsH                           // destino
+    );
+    ctx.restore();
+
+    // 2) TORSO (mitad superior) con rebote + leve inclinación
+    ctx.save();
+    ctx.translate(px, topY + torsoH - bob);
+    ctx.rotate(lean);
+    ctx.drawImage(
+      img, 0, 0, iw, splitY,                            // fuente: torso
+      -dstW/2, -torsoH, dstW, torsoH                    // destino
+    );
+    ctx.restore();
+
+    ctx.restore();
+
+    // Cuando mira "hacia arriba", oscurecer un poco (da sensación de espalda)
+    if (faceAway) {
+      ctx.fillStyle = 'rgba(0,0,0,0.18)';
+      ctx.beginPath();
+      ctx.ellipse(px, footY - dstH*0.4, dstW*0.4, dstH*0.4, 0, 0, Math.PI*2);
+      ctx.fill();
+    }
+  }
+
   /* Dibuja al jugador como sprite de cuerpo completo con animación de
      caminar. Alterna 2 frames al moverse, idle al estar quieto, y se
      voltea horizontalmente según la dirección. Incluye sombra. */
@@ -408,28 +479,7 @@ const EXPLORE = (() => {
 
     // Si la clase tiene imagen externa (assets/), úsala en el mapa
     if (typeof getClassImage === 'function' && getClassImage(state.classId)) {
-      const img = getClassImage(state.classId);
-      // Más grande y proporcional al mapa (antes 54 → ahora 72)
-      const isize = 72;
-      // Animación de caminar: rebote vertical + ligero balanceo (inclinación)
-      const walkBob  = player.moving ? Math.abs(Math.sin(player.frame * 2.5)) * 4 : 0;
-      const walkTilt = player.moving ? Math.sin(player.frame * 2.5) * 0.06 : 0;
-      const flip = (player.dir === 'left');
-
-      // Sombra elíptica en el piso (se achica cuando "salta" al caminar)
-      ctx.fillStyle = 'rgba(0,0,0,.4)';
-      ctx.beginPath();
-      ctx.ellipse(px, py + isize*0.42, isize*0.26 - walkBob*0.5, isize*0.09, 0, 0, Math.PI*2);
-      ctx.fill();
-
-      ctx.imageSmoothingEnabled = false;
-      ctx.save();
-      // Pivote en los "pies" del personaje para que el balanceo se vea natural
-      ctx.translate(px, py + isize*0.4 - walkBob);
-      ctx.rotate(walkTilt);
-      if (flip) ctx.scale(-1, 1);
-      ctx.drawImage(img, -isize/2, -isize*0.9, isize, isize);
-      ctx.restore();
+      drawAnimatedCharacter(getClassImage(state.classId), px, py);
       return;
     }
 
