@@ -351,7 +351,7 @@ const EXPLORE = (() => {
     // Enemigos (sprite de cuerpo completo con leve bob)
     enemies.forEach(e => {
       if (!e.alive) return;
-      const size = e.boss ? 56 : 40;
+      const size = e.boss ? 48 : 34;
       const ebob = Math.sin(time*0.1 + e.x) * 2;
       let cv = null;
       if (typeof makeEnemyBody === 'function') {
@@ -406,7 +406,7 @@ const EXPLORE = (() => {
        · Torso: rebota ligeramente arriba/abajo.
      Al estar quieto, respira (bob muy suave). Gira con flip izq/der. */
   function drawAnimatedCharacter(img, px, py) {
-    const isize = 76;
+    const isize = 52;   // más proporcional al tamaño de las baldosas
     const iw = img.width, ih = img.height;
     const legsFrac = 0.42;                     // 42% inferior = piernas
     const splitY = ih * (1 - legsFrac);
@@ -416,9 +416,9 @@ const EXPLORE = (() => {
     // Fase de la caminata
     const t = player.frame * 2.6;
     const walking = player.moving;
-    const bob   = walking ? Math.abs(Math.sin(t)) * 3.5 : Math.sin(time*0.04)*1.0; // rebote / respiración
-    const swing = walking ? Math.sin(t) : 0;                                        // vaivén piernas
-    const lean  = walking ? Math.sin(t) * 0.04 : 0;                                 // leve inclinación torso
+    const bob   = walking ? Math.abs(Math.sin(t)) * 2.5 : Math.sin(time*0.04)*0.8;
+    const swing = walking ? Math.sin(t) : 0;
+    const lean  = walking ? Math.sin(t) * 0.03 : 0;
 
     const dstW = isize, dstH = isize * (ih/iw);
     const footY = py + dstH*0.46;              // base (pies) en el piso

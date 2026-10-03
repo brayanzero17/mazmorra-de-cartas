@@ -113,7 +113,7 @@ function preloadClassImages() {
         resolve();
       };
       img.onerror = () => { resolve(); };  // no existe → se queda sin imagen
-      img.src = src + '?v=12';
+      img.src = src + '?v=13';
     });
   });
   return Promise.all(jobs);
