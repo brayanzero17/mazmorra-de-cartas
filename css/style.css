@@ -554,15 +554,35 @@ input[type="text"]::placeholder { color: var(--text-dim); }
 .card.disabled { cursor: not-allowed; filter: grayscale(90%) brightness(.6); }
 .card.playable { border-color: var(--toxic); box-shadow: inset 0 0 0 2px #000, 0 4px 0 #000, 0 0 12px #a8e83266; }
 
-.card-class-icon { font-size: 1.5rem; margin-bottom: .3rem; }
-.card-name   { font-family: 'Press Start 2P', monospace; font-size: .58rem; color: var(--bone); margin-bottom: .4rem; line-height: 1.5; text-shadow: 1px 1px 0 #000; }
+/* Banner superior con el icono grande, color según el tipo de carta */
+.card-top {
+  display: flex; align-items: center; justify-content: center;
+  height: 42px;
+  margin: -.6rem -.7rem .4rem;      /* se extiende a los bordes */
+  border-bottom: 2px solid #000;
+  background: #1a1a1a;
+}
+.card-top .px-icon { width: 28px; height: 28px; }
+
+/* Colores de banner y borde por tipo de carta */
+.card.kind-attack  .card-top { background: linear-gradient(180deg,#6a1810,#3a0c08); }
+.card.kind-defense .card-top { background: linear-gradient(180deg,#1a3a6a,#0c1e3a); }
+.card.kind-heal    .card-top { background: linear-gradient(180deg,#1a5a2a,#0c3016); }
+.card.kind-magic   .card-top { background: linear-gradient(180deg,#4a2a7a,#241440); }
+.card.kind-attack  { border-color: #8a3020; }
+.card.kind-defense { border-color: #2a4a8a; }
+.card.kind-heal    { border-color: #2a7a3a; }
+.card.kind-magic   { border-color: #6a3ab8; }
+
+.card-name   { font-family: 'Press Start 2P', monospace; font-size: .55rem; color: var(--bone); margin-bottom: .4rem; line-height: 1.5; text-shadow: 1px 1px 0 #000; text-align: center; }
 .card-effect { color: var(--text); font-size: 1.05rem; line-height: 1.25; margin-bottom: .4rem; }
 .card-req {
+  display: inline-flex; align-items: center; gap: 3px;
   background: #000;
   border: 2px solid var(--steel);
   color: var(--text-dim);
   font-size: 1rem;
-  padding: .1rem .35rem;
+  padding: .1rem .4rem;
 }
 .card-req.ok { border-color: var(--toxic); color: var(--toxic-light); }
 

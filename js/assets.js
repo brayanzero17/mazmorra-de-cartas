@@ -125,7 +125,7 @@ function loadImageInto(store, key, src) {
       resolve();
     };
     img.onerror = () => { resolve(); };   // no existe → se queda sin imagen
-    img.src = src + '?v=15';
+    img.src = src + '?v=16';
   });
 }
 

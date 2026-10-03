@@ -261,6 +261,66 @@ const ICONS = {
     ],
   },
 
+  /* ⚔️ ATAQUE — espada */
+  attack: {
+    palette: { o:'#000', s:'#b0b8c8', S:'#e8f0ff', g:'#c89028', h:'#6a4418' },
+    art: [
+      '......oo',
+      '.....oSo',
+      '....oSSo',
+      '...oSSo.',
+      '..oSSo..',
+      'ohgSo...',
+      'ohho....',
+      'oo......',
+    ],
+  },
+
+  /* 🛡️ DEFENSA — escudo */
+  defense: {
+    palette: { o:'#000', s:'#4a6a9a', S:'#6a8aca', g:'#c89028', l:'#a8c0e8' },
+    art: [
+      'oooooooo',
+      'oSSllSSo',
+      'oSSllSSo',
+      'oSgggSSo',
+      'oSSggSSo',
+      '.oSSSSo.',
+      '..oSSo..',
+      '...oo...',
+    ],
+  },
+
+  /* 💚 CURA — cruz/corazón verde */
+  heal: {
+    palette: { o:'#000', g:'#2a8a3a', G:'#4ae85a', l:'#a8ffb0' },
+    art: [
+      '..oooo..',
+      '.oGGGGo.',
+      'oGGllGGo',
+      'oGllllGo',
+      'oGGllGGo',
+      '.oGllGo.',
+      '..oGGo..',
+      '...oo...',
+    ],
+  },
+
+  /* ✨ MAGIA — estrella mágica */
+  magic: {
+    palette: { o:'#000', m:'#6a3ab8', M:'#a85ae8', l:'#e0b0ff' },
+    art: [
+      '...oo...',
+      '...Ml...',
+      'o.oMMo.o',
+      'oMMMMMMo',
+      '.oMMMMo.',
+      'oMMoMMMo',
+      'oMo.oMMo',
+      'oo...oo.',
+    ],
+  },
+
 };
 
 const _iconCache = {};

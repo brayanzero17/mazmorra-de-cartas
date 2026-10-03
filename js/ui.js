@@ -184,6 +184,33 @@ function rollDice() {
   }, 60);
 }
 
+/* Determina el "tipo visual" de una carta para su icono/color.
+   Las cartas con efecto mágico (congelar) se marcan como 'magic'. */
+function cardKind(card) {
+  if (card.type === 'defense') return 'defense';
+  if (card.type === 'heal')    return 'heal';
+  // ataque: ¿es mágico? (mago usa hechizos; freeze = magia)
+  try {
+    const r = card.calc ? card.calc(6) : {};
+    if (r.freeze) return 'magic';
+  } catch (e) {}
+  if (state.classId === 'mage') return 'magic';
+  return 'attack';
+}
+
+/* Texto corto del requisito del dado (sin emoji, iconHTML pone el dado). */
+function reqText(req) {
+  switch (req.type) {
+    case 'any':  return 'Cualquiera';
+    case 'gte':  return '≥ ' + req.value;
+    case 'lte':  return '≤ ' + req.value;
+    case 'eq':   return '= ' + req.value;
+    case 'even': return 'Par';
+    case 'odd':  return 'Impar';
+    default:     return '?';
+  }
+}
+
 /* ──────────────────────────── Mano de cartas ───────────────────────── */
 function renderHand() {
   const hand  = document.getElementById('hand-cards');
@@ -197,14 +224,18 @@ function renderHand() {
     const playable = state.canPlay && meetsDiceReq(card.diceReq, state.dice);
     const reqOk    = state.hasRolled && meetsDiceReq(card.diceReq, state.dice);
 
+    const kind = cardKind(card);   // attack / defense / heal / magic
+
     const el = document.createElement('div');
-    el.className = 'card' + (playable ? ' playable' : '') + (state.canPlay && !playable ? ' disabled' : '');
+    el.className = `card kind-${kind}` + (playable ? ' playable' : '') + (state.canPlay && !playable ? ' disabled' : '');
     el.onclick = () => onCardClick(card.id);
+    const ico = (typeof iconHTML === 'function') ? iconHTML(kind, 3) : card.icon;
+    const diceIco = (typeof iconHTML === 'function') ? iconHTML('dice', 2) : '🎲';
     el.innerHTML = `
-      <div class="card-class-icon">${card.icon}</div>
+      <div class="card-top">${ico}</div>
       <div class="card-name">${card.name}</div>
       <div class="card-effect">${card.effect}</div>
-      <div class="card-req ${reqOk ? 'ok' : ''}">${reqLabel(card.diceReq)}</div>
+      <div class="card-req ${reqOk ? 'ok' : ''}">${diceIco} ${reqText(card.diceReq)}</div>
     `;
     hand.appendChild(el);
   });
