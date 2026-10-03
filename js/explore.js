@@ -348,11 +348,29 @@ const EXPLORE = (() => {
       }
     });
 
-    // Enemigos (sprite de cuerpo completo con leve bob)
+    // Enemigos: imagen externa (assets/) si existe, si no el pixel art.
     enemies.forEach(e => {
       if (!e.alive) return;
+      const ebob = Math.sin(time*0.1 + e.x) * 2;   // flotar sutil
+
+      // 1) Imagen externa de ChatGPT
+      if (typeof getEnemyImage === 'function' && getEnemyImage(e.spriteKey)) {
+        const img = getEnemyImage(e.spriteKey);
+        const isize = e.boss ? 70 : 46;
+        const h = isize * (img.height / img.width);
+        // Sombra
+        ctx.fillStyle = 'rgba(0,0,0,.4)';
+        ctx.beginPath();
+        ctx.ellipse(e.x, e.y + isize*0.3, isize*0.28, isize*0.08, 0, 0, Math.PI*2);
+        ctx.fill();
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(img, e.x - isize/2, e.y - h*0.6 + ebob, isize, h);
+        if (e.boss) { ctx.font = '22px serif'; ctx.textAlign = 'center'; ctx.fillText('👑', e.x, e.y - h*0.6 - 4 + ebob); }
+        return;
+      }
+
+      // 2) Pixel art (fallback)
       const size = e.boss ? 48 : 34;
-      const ebob = Math.sin(time*0.1 + e.x) * 2;
       let cv = null;
       if (typeof makeEnemyBody === 'function') {
         const fr = (Math.floor(time*0.12) % 2 === 0) ? 'a' : 'b';

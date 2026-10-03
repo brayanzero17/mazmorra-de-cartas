@@ -18,8 +18,18 @@ const CLASS_IMAGE_FILES = {
   demon:    'assets/demonio.png',
 };
 
+/* Mapa de enemigo (spriteKey) → archivo de imagen. */
+const ENEMY_IMAGE_FILES = {
+  goblin:     'assets/goblin.png',
+  esqueleto:  'assets/esqueleto.png',
+  orco:       'assets/orco.png',
+  nigromante: 'assets/nigromante.png',
+  dragon:     'assets/dragon.png',
+};
+
 /* Canvases ya procesados (fondo quitado), listos para dibujar. */
 const CLASS_IMAGES = {};   // classId → canvas (o undefined si no hay)
+const ENEMY_IMAGES = {};   // spriteKey → canvas (o undefined si no hay)
 
 /* Quita el fondo claro de una imagen: los píxeles casi blancos se
    vuelven transparentes. Devuelve un canvas recortado al contenido. */
@@ -42,8 +52,10 @@ function removeWhiteBackground(img) {
     const isBg = (r, g, b, a) => {
       if (a < 24) return true;                 // ya transparente
       const mn = Math.min(r,g,b), mx = Math.max(r,g,b);
-      const grayish = (mx - mn) < 28;          // sin color (gris/blanco)
-      return grayish && mn >= 150;             // gris medio-claro a blanco
+      const grayish = (mx - mn) < 28;          // sin color (gris/blanco/negro)
+      if (grayish && mn >= 150) return true;   // fondo claro (blanco/gris claro)
+      if (grayish && mx <= 40)  return true;   // fondo oscuro (negro/casi negro)
+      return false;
     };
 
     // Flood fill desde los bordes: sólo se vuelve transparente el fondo
@@ -78,7 +90,8 @@ function removeWhiteBackground(img) {
           if (px[p+3] === 0) continue;
           const mn = Math.min(px[p],px[p+1],px[p+2]);
           const mx = Math.max(px[p],px[p+1],px[p+2]);
-          if ((mx - mn) < 28 && mn >= 150) {   // es gris/blanco
+          const esFondo = (mx-mn)<28 && (mn>=150 || mx<=40);  // claro u oscuro
+          if (esFondo) {
             // ¿muchos vecinos transparentes? → también es fondo
             let transp = 0, tot = 0;
             for (let dy=-1; dy<=1; dy++) for (let dx=-1; dx<=1; dx++) {
@@ -103,30 +116,34 @@ function removeWhiteBackground(img) {
 
 /* Precarga todas las imágenes de clase disponibles. Devuelve una promesa
    que resuelve cuando terminó de intentar cargarlas todas. */
-function preloadClassImages() {
-  const jobs = Object.entries(CLASS_IMAGE_FILES).map(([classId, src]) => {
-    return new Promise((resolve) => {
-      const img = new Image();
-      img.onload = () => {
-        try { CLASS_IMAGES[classId] = removeWhiteBackground(img); }
-        catch (e) { CLASS_IMAGES[classId] = null; }
-        resolve();
-      };
-      img.onerror = () => { resolve(); };  // no existe → se queda sin imagen
-      img.src = src + '?v=13';
-    });
+function loadImageInto(store, key, src) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      try { store[key] = removeWhiteBackground(img); }
+      catch (e) { store[key] = null; }
+      resolve();
+    };
+    img.onerror = () => { resolve(); };   // no existe → se queda sin imagen
+    img.src = src + '?v=15';
   });
+}
+
+function preloadClassImages() {
+  const jobs = [];
+  for (const [classId, src] of Object.entries(CLASS_IMAGE_FILES))  jobs.push(loadImageInto(CLASS_IMAGES, classId, src));
+  for (const [key, src]     of Object.entries(ENEMY_IMAGE_FILES))  jobs.push(loadImageInto(ENEMY_IMAGES, key, src));
   return Promise.all(jobs);
 }
 
 /* ¿Hay imagen externa para esta clase? */
-function hasClassImage(classId) {
-  return !!CLASS_IMAGES[classId];
-}
+function hasClassImage(classId) { return !!CLASS_IMAGES[classId]; }
 /* Devuelve el canvas de la imagen de clase (o null). */
-function getClassImage(classId) {
-  return CLASS_IMAGES[classId] || null;
-}
+function getClassImage(classId) { return CLASS_IMAGES[classId] || null; }
+
+/* Igual para enemigos (por spriteKey). */
+function hasEnemyImage(key) { return !!ENEMY_IMAGES[key]; }
+function getEnemyImage(key) { return ENEMY_IMAGES[key] || null; }
 
 /* Precargar al iniciar la página. */
 window.addEventListener('load', () => {

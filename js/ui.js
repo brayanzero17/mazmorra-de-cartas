@@ -100,18 +100,27 @@ function renderHUD() {
 
 function renderEnemy() {
   const e = state.enemy;
-
-  // Sprite pixel art del enemigo (canvas). Fallback a emoji si falla.
   const spriteEl = document.getElementById('enemy-sprite');
-  let canvas = null;
-  if (typeof makeEnemySprite === 'function' && e.spriteKey) {
-    canvas = makeEnemySprite(e.spriteKey);
-  }
-  if (canvas) {
+
+  // 1) Imagen externa de ChatGPT (assets/) si existe
+  if (typeof getEnemyImage === 'function' && e.spriteKey && getEnemyImage(e.spriteKey)) {
+    const img = document.createElement('img');
+    img.src = getEnemyImage(e.spriteKey).toDataURL();
+    img.className = 'enemy-img';
     spriteEl.innerHTML = '';
-    spriteEl.appendChild(canvas);
+    spriteEl.appendChild(img);
   } else {
-    spriteEl.textContent = e.sprite;
+    // 2) Pixel art (fallback)
+    let canvas = null;
+    if (typeof makeEnemySprite === 'function' && e.spriteKey) {
+      canvas = makeEnemySprite(e.spriteKey);
+    }
+    if (canvas) {
+      spriteEl.innerHTML = '';
+      spriteEl.appendChild(canvas);
+    } else {
+      spriteEl.textContent = e.sprite;
+    }
   }
 
   document.getElementById('enemy-name').textContent   = e.name;
